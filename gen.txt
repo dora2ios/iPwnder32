@@ -1,3 +1,0 @@
-gcc -lusb-1.0 -lcrypto -I./ -o pwnedDFU exploit.c usb.c payload_gen.c
-
-macos>10.12
