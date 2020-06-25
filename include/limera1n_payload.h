@@ -1,5 +1,14 @@
+/*
+ * limera1n_payload.h - exploit discovered by geohot.
+ * copyright (C) 2020/05/25 dora2ios
+ *
+ */
+
 #ifndef limera1n_payload_H
 #define limera1n_payload_H
+
+// Based on ipwndfu payload by axi0mX
+// https://github.com/axi0mX/ipwndfu/blob/0e28932ec6a2a570b10fd77e50bda4216418cd98/src/limera1n-shellcode.S
 
 const unsigned char limera1n_payload[] = {
     0x05, 0x04, 0x00, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01, 0x04, 0x00, 0x84,

