@@ -22,18 +22,21 @@ irecv_client_t client;
 #include <boot.h>
 
 void usage(char** argv) {
-    printf("usage: %s [options]\n", argv[0]);
-    printf("\t-p\t\tput device in pwned DFU mode\n");
-    printf("\t\t\t*support device lists\n");
-    printf("\t\t\t\t s5l8920x ... limera1n\n");
-    printf("\t\t\t\t s5l8922x ... limera1n\n");
-    printf("\t\t\t\t s5l8930x ... limera1n\n");
-    printf("\t\t\t\t s5l895Xx ... checkm8\n");
-  //printf("\t\t\t\t s5l8960x ... checkm8\n");
+    printf("iPwnder32 - A tool to exploit bootrom for 32-bit devices\n");
+    printf("Usage: %s [options]\n", argv[0]);
+    printf("\t-p\t\tPut device in pwned DFU mode\n");
+    printf("\t\t\t[Support device lists]\n");
+    printf("\t\t\t  \x1b[36ms5l8920x\x1b[39m - \x1b[31mlimera1n\x1b[39m\n");
+    printf("\t\t\t  \x1b[36ms5l8922x\x1b[39m - \x1b[31mlimera1n\x1b[39m\n");
+    printf("\t\t\t  \x1b[36ms5l8930x\x1b[39m - \x1b[31mlimera1n\x1b[39m\n");
+    printf("\t\t\t  \x1b[36ms5l895Xx\x1b[39m - \x1b[35mcheckm8\x1b[39m\n");
+  //printf("\t\t\t  \x1b[36ms5l8960x\x1b[39m - \x1b[35mcheckm8\x1b[39m\n");
     printf("\n");
-    printf("\t-d\t\tdemote device to enable JTAG\n");
+    printf("\t-d\t\tDemote device to enable JTAG\n");
     printf("\n");
-    printf("\t-f <ibss/illb>\tenter soft DFU mode\n");
+    printf("\t-f <img> [arg]\tSend DFU image and boot it\n");
+    printf("\t\t\t[Additional args]\n");
+    printf("\t\t\t  \x1b[35m--pwn\x1b[39m: Apply rsa patch to image (only for 32bit \x1b[35mcheckm8\x1b[39m devices)\n");
 }
 
 int main(int argc, char** argv) {
@@ -41,6 +44,7 @@ int main(int argc, char** argv) {
     int pwned_dfu;
     int demote;
     int boot;
+    int pwn;
     uint16_t cpid;
     
     FILE* fp = NULL;
@@ -63,6 +67,13 @@ int main(int argc, char** argv) {
         if(!fp) {
             printf("ERROR: opening %s!\n", argv[2]);
             return -1;
+        }
+        
+        pwn = 0;
+        if(argc == 4){
+            if(!strcmp(argv[3], "--pwn")) {
+                pwn = 1;
+            }
         }
         
         fseek(fp, 0, SEEK_END);
@@ -90,7 +101,7 @@ int main(int argc, char** argv) {
         const struct irecv_device_info *devinfo = irecv_get_device_info(client);
         if (devinfo){
             cpid = devinfo->cpid;
-            printf("** DFU device infomation\n");
+            printf("\x1b[7m\x1b[1mDFU device infomation\x1b[0m\n");
             printf("CPID:0x%04X CPRV:0x%02X BDID:0x%02X ECID:0x%016llX CPFM:0x%02X SCEP:0x%02X IBFL:0x%02X\n" , devinfo->cpid, devinfo->cprv, devinfo->bdid, devinfo->ecid, devinfo->cpfm, devinfo->scep, devinfo->ibfl);
             printf("SRTG:[%s] ", (devinfo->srtg) ? devinfo->srtg : "N/A");
             char* p = strstr(devinfo->serial_string, "PWND:[");
@@ -98,10 +109,16 @@ int main(int argc, char** argv) {
                 p+=6;
                 char* pend = strchr(p, ']');
                 if (pend) {
-                    printf("PWND:[%.*s]", (int)(pend-p), p);
+                    printf("PWND:[\x1b[35;1m%.*s\x1b[39;0m]", (int)(pend-p), p);
                 }
             }
             printf("\n");
+            if(!(devinfo->srtg)){
+                 printf("Make sure device is in SecureROM DFU mode and not LLB/iBSS (soft) DFU mode.\n");
+                exploit_exit();
+                return 0;
+            }
+            
             
         } else {
             printf("Could not get device info?!\n");
@@ -132,7 +149,7 @@ int main(int argc, char** argv) {
         }
         
         if(cpid == 0x8960){
-            printf("exploiting with checkm8 [BETA]\n");
+            // beta
             checkm8_init();
             ret = 1;
         }
@@ -156,7 +173,7 @@ int main(int argc, char** argv) {
     }
     
     if(boot) {
-        boot_client(file, file_len);
+        boot_client(file, file_len, pwn);
     }
     
     

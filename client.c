@@ -46,7 +46,7 @@ int do_exploit() {
     const struct irecv_device_info* info = irecv_get_device_info(client);
     char* pwnd_str = strstr(info->serial_string, "PWND:[");
     if(pwnd_str) {
-        printf("This device is already in pwned DFU mode.\n");
+        printf("\x1b[31mThis device is already in pwned DFU mode!\x1b[39m\n");
         return 0;
     }
     exploit_list_t* curr = exploits;

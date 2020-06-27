@@ -29,8 +29,8 @@ int limera1n_supported(irecv_client_t client) {
 }
 
 int limera1n_exploit(irecv_client_t client) {
-    printf("** exploiting with limera1n\n");
-    printf("*** based on limera1n exploit (heap overflow) by geohot\n");
+    printf("\x1b[1m** \x1b[31mexploiting with limera1n\x1b[39;0m\n");
+    printf("\x1b[1m***\x1b[0m based on limera1n exploit (heap overflow) by geohot\n");
     
     unsigned char *payload;
     size_t payload_len;
@@ -43,14 +43,14 @@ int limera1n_exploit(irecv_client_t client) {
     uint16_t cpid = irecv_get_cpid();
     
     if(cpid == 0x8920){
-        printf("iPhone 3GS is detected. Checking the Bootrom version.\n");
+        printf("\x1b[34mDetected iPhone 3GS. Checking the Bootrom version.\x1b[39m\n");
         rom = i3gs_bootrom(); // 0:old, 1:new
         if(rom == -1){
             printf("Failed to check bootrom version\n");
             return -1;
         }
         if(rom == 0){
-            printf("Bootrom: old\n");
+            printf("Bootrom: \x1b[1mold\x1b[0m\n");
         }
         if(rom == 1){
             printf("Bootrom: new\n");
@@ -73,21 +73,21 @@ int limera1n_exploit(irecv_client_t client) {
         return -1;
     }
     
-    printf("Sending exploit payload\n");
+    printf("\x1b[36mSending exploit payload\x1b[39m\n");
     send_data(client, payload, payload_len);
     
-    printf("Sending fake data\n");
+    printf("\x1b[36mSending fake data\x1b[39m\n");
     if(irecv_usb_control_transfer(client, 0xA1, 1, 0, 0, assert, 1, 100) != 1){
         printf("Exploit failed! device is NOT in pwned DFU mode.\n");
         return -1;
     }
     irecv_async_usb_control_transfer_with_cancel(client, 0x21, 1, 0, 0, buf, 0x800, 10000000);
     
-    printf("Executing exploit\n");
+    printf("\x1b[36mExecuting exploit\x1b[39m\n");
     irecv_usb_control_transfer(client, 0x21, 2, 0, 0, NULL, 0, 100);
     irecv_reset(client);
     
-    printf("Reconnecting to device\n");
+    printf("\x1b[36mReconnecting to device\x1b[39m\n");
     irecv_close(client);
     client = NULL;
     usleep(1000);
@@ -98,9 +98,9 @@ int limera1n_exploit(irecv_client_t client) {
     }
     
     irecv_finish_transfer(client);
-    printf("Exploit sent\n");
+    printf("\x1b[36mExploit sent\x1b[39m\n");
     
-    printf("Reconnecting to device\n");
+    printf("\x1b[36mReconnecting to device\x1b[39m\n");
     irecv_close(client);
     client = NULL;
     usleep(1000);
@@ -119,7 +119,7 @@ int limera1n_exploit(irecv_client_t client) {
         printf("Device not in pwned DFU mode.\n");
         return -1;
     }
-    printf("Device is now in pwned DFU mode\n");
+    printf("\x1b[31;1mDevice is now in pwned DFU mode!\x1b[39;0m\n");
     irecv_close(client);
     return 0;
 }

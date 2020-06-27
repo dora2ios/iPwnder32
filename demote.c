@@ -29,11 +29,20 @@ int demote_client() {
     }
     
     const struct irecv_device_info* info = irecv_get_device_info(client);
-    char* pwnd_str = strstr(info->serial_string, "checkm8");
+    char* pwnd_str = strstr(info->serial_string, "PWND:[");
     if(!pwnd_str) {
-        printf("This device is not in checkm8 pwned DFU mode.\n");
-        return 0;
+        irecv_close(client);
+        printf("Device not in pwned DFU mode.\n");
+        return -1;
     }
+    
+    char* checkm8_str = strstr(info->serial_string, "checkm8");
+    if(!checkm8_str) {
+        printf("This device is not in checkm8 pwned DFU mode.\n");
+        return -1;
+    }
+    
+    printf("\x1b[36mFound checkm8 device\x1b[39m\n");
     
     /* demote */
     void* response;
@@ -134,10 +143,10 @@ int demote_client() {
     irecv_usb_control_transfer(client, 0xA1, 2, 0xFFFF, 0, response, 0x14, 100);
     
     demote_register = *((uint32_t*)response+4);
-    printf("Demotion register: 0x%lx\n", demote_register);
+    printf("\x1b[36mDemotion register:\x1b[39m 0x%lx\n", demote_register);
     
     if(demote_register & 1){
-        printf("Attempting to demote device.\n");
+        printf("\x1b[43;7;1mAttempting to demote device\x1b[49;0m\n");
 
         switch(bit) {
             case 64:
@@ -205,17 +214,17 @@ int demote_client() {
         
         free(response);
         
-        printf("Demotion register: 0x%lx\n", new_demote_register);
+        printf("\x1b[35mDemotion register:\x1b[39m 0x%lx\n", new_demote_register);
         if(new_demote_register != demote_register){
-            printf("Demote: success\n");
+            printf("\x1b[36mDemote: \x1b[31;1msuccess\x1b[39;0m\n");
         } else {
-            printf("Demote: failed\n");
+            printf("\x1b[36mDemote: \x1b[35mfailed\x1b[39m\n");
             irecv_close(client);
             return -1;
         }
         
     } else {
-        printf("Device is already demoted.\n");
+        printf("\x1b[31mDevice is already demoted.\x1b[39m\n");
     }
     
     irecv_close(client);

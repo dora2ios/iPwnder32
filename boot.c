@@ -14,6 +14,7 @@
 #include <common.h>
 #include <boot.h>
 #include <client.h>
+#include <iBoot32Patcher/type.h>
 
 typedef struct img3Tag {
     uint32_t magic;            // see below
@@ -156,7 +157,7 @@ int check_img3_file_format(irecv_client_t client, void* file, size_t sz, void** 
     switch(Img3header_magic) {
         case ARMv7_VECTOR:
             // Do nothing
-            printf("Decrypted Img3 image\n");
+            printf("\x1b[36mDecrypted Img3 image\x1b[39m\n");
             *out = malloc(sz);
             *outsz = sz;
             memcpy(*out, file, *outsz);
@@ -164,7 +165,7 @@ int check_img3_file_format(irecv_client_t client, void* file, size_t sz, void** 
             break;
             
         case IMG3_HEADER:
-            printf("Packed Img3 image\n");
+            printf("\x1b[36mPacked Img3 image\x1b[39m\n");
             uint32_t ibss_data_start;
             uint32_t tag_header = 0;
             int isKBAG = 0;
@@ -174,7 +175,7 @@ int check_img3_file_format(irecv_client_t client, void* file, size_t sz, void** 
             uint32_t img3_ident = *(uint32_t*)(file + offsetof(struct img3File, ident));
             //printf("Ident : 0x%08x\n", img3_ident);
             if (img3_ident == IMG3_ILLB || img3_ident == IMG3_IBSS){
-                printf("Detect iBSS/LLB image\n");
+                printf("\x1b[35mDetect iBSS/LLB image\x1b[39m\n");
             } else {
                 printf("Invalid image\n");
                 return -1;
@@ -255,7 +256,7 @@ int check_img3_file_format(irecv_client_t client, void* file, size_t sz, void** 
 
 int boot_client_n(irecv_client_t client, char* ibss, size_t ibss_sz) {
     int ret;
-    printf("Uploading soft DFU\n");
+    printf("\x1b[36mUploading soft DFU\x1b[39m\n");
     ret = irecv_send_buffer(client, (unsigned char*)ibss, ibss_sz, 0);
     if(ret != 0) {
         printf("Failed to upload soft DFU.\n");
@@ -271,7 +272,7 @@ int boot_client_n(irecv_client_t client, char* ibss, size_t ibss_sz) {
 }
 
 // boot for 32-bit checkm8 devices
-int boot_client(void* buf, size_t sz) {
+int boot_client(void* buf, size_t sz, int pwn) {
     int ret;
     if(!client) {
         ret = irecv_get_device();
@@ -312,9 +313,25 @@ int boot_client(void* buf, size_t sz) {
     ret = check_img3_file_format(client, buf, sz, &ibss, &ibss_sz);
     
     if (ret != 0){
-        printf("Failed to boot soft DFU.\n");
+        printf("Failed to make soft DFU.\n");
         irecv_close(client);
         return -1;
+    }
+    
+    // iBoot32Patcher
+    if(pwn){
+        iboot32_pacther_t conf;
+        iboot32pacher_init(&conf); // init
+        
+        conf.rsa = true; // enable rsa patch
+        
+        printf("\x1b[31mApply RSA patch to image\x1b[39m\n");
+        ret = iBoot32Patcher(ibss, ibss_sz, &conf); // patch ibss/illb
+        if(ret != 0){
+            printf("Failed to patch soft DFU.\n");
+            irecv_close(client);
+            return -1;
+        }
     }
     
     send_data(client, blank, 16);
@@ -322,7 +339,7 @@ int boot_client(void* buf, size_t sz) {
     irecv_usb_control_transfer(client, 0xA1, 3, 0, 0, blank, 6, 100);
     irecv_usb_control_transfer(client, 0xA1, 3, 0, 0, blank, 6, 100);
     
-    printf("Uploading soft DFU\n");
+    printf("\x1b[36mUploading soft DFU\x1b[39m\n");
     size_t len = 0;
     while(len < ibss_sz) {
         size_t size = ((ibss_sz - len) > 0x800) ? 0x800 : (ibss_sz - len);

