@@ -81,7 +81,8 @@ int limera1n_exploit(irecv_client_t client) {
         printf("Exploit failed! device is NOT in pwned DFU mode.\n");
         return -1;
     }
-    irecv_async_usb_control_transfer_with_cancel(client, 0x21, 1, 0, 0, buf, 0x800, 10000000);
+    
+    irecv_usb_control_transfer(client, 0x21, 1, 0, 0, buf, 0x800, 10);
     
     printf("\x1b[36mExecuting exploit\x1b[39m\n");
     irecv_usb_control_transfer(client, 0x21, 2, 0, 0, NULL, 0, 100);
@@ -90,7 +91,6 @@ int limera1n_exploit(irecv_client_t client) {
     printf("\x1b[36mReconnecting to device\x1b[39m\n");
     irecv_close(client);
     client = NULL;
-    usleep(1000);
     irecv_open_with_ecid_and_attempts(&client, 0, 5);
     if(!client) {
         printf("Failed to reconnect to device.\n");
@@ -103,7 +103,6 @@ int limera1n_exploit(irecv_client_t client) {
     printf("\x1b[36mReconnecting to device\x1b[39m\n");
     irecv_close(client);
     client = NULL;
-    usleep(1000);
     irecv_open_with_ecid_and_attempts(&client, 0, 5);
     if(!client) {
         printf("Failed to reconnect to device.\n");
