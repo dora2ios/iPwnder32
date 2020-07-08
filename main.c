@@ -12,6 +12,7 @@
 #include <irecovery/libirecovery.h>
 
 irecv_client_t client;
+int fast_dfu=0;
 
 #include <client.h>
 #include <payload.h>
@@ -24,13 +25,15 @@ irecv_client_t client;
 void usage(char** argv) {
     printf("iPwnder32 - A tool to exploit bootrom for 32-bit devices\n");
     printf("Usage: %s [options]\n", argv[0]);
-    printf("\t-p\t\tPut device in pwned DFU mode\n");
+    printf("\t-p [flag]\tPut device in pwned DFU mode\n");
     printf("\t\t\t[Support device lists]\n");
     printf("\t\t\t  \x1b[36ms5l8920x\x1b[39m - \x1b[31mlimera1n\x1b[39m\n");
     printf("\t\t\t  \x1b[36ms5l8922x\x1b[39m - \x1b[31mlimera1n\x1b[39m\n");
     printf("\t\t\t  \x1b[36ms5l8930x\x1b[39m - \x1b[31mlimera1n\x1b[39m\n");
     printf("\t\t\t  \x1b[36ms5l895Xx\x1b[39m - \x1b[35mcheckm8\x1b[39m\n");
     printf("\t\t\t  \x1b[36ms5l8960x\x1b[39m - \x1b[35mcheckm8\x1b[39m\n");
+    printf("\t\t\t[Additional flag]\n");
+    printf("\t\t\t  \x1b[35m-f\x1b[39m: Enable fast mode (s5l8960x only)\n");
     printf("\n");
     printf("\t-d\t\tDemote device to enable JTAG\n");
     printf("\n");
@@ -58,6 +61,12 @@ int main(int argc, char** argv) {
     
     if(!strcmp(argv[1], "-p")) {
         pwned_dfu = 1;
+        if(argc == 3){
+            if(!strcmp(argv[2], "-f")) {
+                fast_dfu = 1;
+            }
+        }
+        
     } else if(!strcmp(argv[1], "-d")) {
         demote = 1;
     } else if(!strcmp(argv[1], "-f")) {
