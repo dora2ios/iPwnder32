@@ -30,7 +30,7 @@ void usage(char** argv) {
     printf("\t\t\t  \x1b[36ms5l8922x\x1b[39m - \x1b[31mlimera1n\x1b[39m\n");
     printf("\t\t\t  \x1b[36ms5l8930x\x1b[39m - \x1b[31mlimera1n\x1b[39m\n");
     printf("\t\t\t  \x1b[36ms5l895Xx\x1b[39m - \x1b[35mcheckm8\x1b[39m\n");
-  //printf("\t\t\t  \x1b[36ms5l8960x\x1b[39m - \x1b[35mcheckm8\x1b[39m\n");
+    printf("\t\t\t  \x1b[36ms5l8960x\x1b[39m - \x1b[35mcheckm8\x1b[39m\n");
     printf("\n");
     printf("\t-d\t\tDemote device to enable JTAG\n");
     printf("\n");
@@ -103,6 +103,10 @@ int main(int argc, char** argv) {
             cpid = devinfo->cpid;
             printf("\x1b[7m\x1b[1mDFU device infomation\x1b[0m\n");
             printf("CPID:0x%04X CPRV:0x%02X BDID:0x%02X ECID:0x%016llX CPFM:0x%02X SCEP:0x%02X IBFL:0x%02X\n" , devinfo->cpid, devinfo->cprv, devinfo->bdid, devinfo->ecid, devinfo->cpfm, devinfo->scep, devinfo->ibfl);
+            if((devinfo->cpfm & 0xFFFFFFFE) == 0x00){
+                printf("\x1b[7;1mProduction Mode: \x1b[41mDevelopment\x1b[49;0m\n");
+                printf("\x1b[31;1mThis device is development or demoted device.\x1b[39;0m\n");
+            }
             printf("SRTG:[%s] ", (devinfo->srtg) ? devinfo->srtg : "N/A");
             char* p = strstr(devinfo->serial_string, "PWND:[");
             if (p) {
@@ -143,13 +147,13 @@ int main(int argc, char** argv) {
         }
         
         if((cpid|0xf) == (0x8950|0xf)){
-            // iPhone 5/5c, iPad 4
+            // Apple A6(X)
             checkm8_init();
             ret = 1;
         }
         
         if(cpid == 0x8960){
-            // beta
+            // Apple A7
             checkm8_init();
             ret = 1;
         }
