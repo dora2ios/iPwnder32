@@ -37,9 +37,7 @@ void usage(char** argv) {
     printf("\n");
     printf("\t-d\t\tDemote device to enable JTAG\n");
     printf("\n");
-    printf("\t-f <img> [arg]\tSend DFU image and boot it\n");
-    printf("\t\t\t[Additional args]\n");
-    printf("\t\t\t  \x1b[35m--pwn\x1b[39m: Apply rsa patch to image (only for 32bit \x1b[35mcheckm8\x1b[39m devices)\n");
+    printf("\t-f <img>\tSend DFU image and boot it\n");
 }
 
 int main(int argc, char** argv) {
@@ -47,7 +45,6 @@ int main(int argc, char** argv) {
     int pwned_dfu;
     int demote;
     int boot;
-    int pwn;
     uint16_t cpid;
     
     FILE* fp = NULL;
@@ -76,13 +73,6 @@ int main(int argc, char** argv) {
         if(!fp) {
             printf("ERROR: opening %s!\n", argv[2]);
             return -1;
-        }
-        
-        pwn = 0;
-        if(argc == 4){
-            if(!strcmp(argv[3], "--pwn")) {
-                pwn = 1;
-            }
         }
         
         fseek(fp, 0, SEEK_END);
@@ -186,7 +176,7 @@ int main(int argc, char** argv) {
     }
     
     if(boot) {
-        boot_client(file, file_len, pwn);
+        boot_client(file, file_len);
     }
     
     

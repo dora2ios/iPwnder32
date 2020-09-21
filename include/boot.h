@@ -8,6 +8,6 @@
 #define boot_H
 
 #include <irecovery/libirecovery.h>
-int boot_client(void* buf, size_t sz, int pwn);
+int boot_client(void* buf, size_t sz);
 
 #endif

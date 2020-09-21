@@ -1,3 +1,15 @@
 *.o
 .DS_Store
 pwnedDFU
+pwn
+iPwnder
+make_macosx.sh
+include/a
+include/a2
+include/a3
+include/a.h
+include/dump.c
+include/gen
+src/make.sh
+src/payload.elf.bin
+src/usb_0xA1_2_armv7.bin

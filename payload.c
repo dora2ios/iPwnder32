@@ -12,11 +12,17 @@
 #include <checkm8_payload.h>
 #include <limera1n_payload.h>
 
-#define bswap32 __builtin_bswap32
+#define bswap32                 __builtin_bswap32
 
-#define PAYLOAD_OFFSET_ARMV7 384
-#define PAYLOAD_SIZE_ARMV7 320
-#define TRAMPOLINE_SIZE_ARMV7 sizeof(uint64_t)
+#define IMG3_MAGIC              0x496D6733
+#define TAG_KBAG                0x4b424147
+#define TAG_DATA                0x44415441
+#define AES_TYPE_GID            0x20000200
+#define AES_MODE_256            0x20000000
+
+#define PAYLOAD_OFFSET_ARMV7    384
+#define PAYLOAD_SIZE_ARMV7      0xb00
+#define TRAMPOLINE_SIZE_ARMV7   sizeof(uint64_t)
 
 // for 64-bit
 unsigned char trampoline64[] = {
@@ -136,9 +142,6 @@ int add_trampoline64_asm_arm64_branch(unsigned char* payload, size_t payload_len
 
 int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_config_t* config) {
     int ret;
-    //config->payload = malloc(checkm8_payload_length_armv7);
-    //config->payload_len = checkm8_payload_length_armv7;
-    //memcpy(config->payload, checkm8_payload_armv7, checkm8_payload_length_armv7);
     
     uint32_t* shellcode_constants;
     size_t shellcode_constants_len;
@@ -155,33 +158,35 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
     
     switch(cpid) {
         case 0x8950:
-            config->payload = malloc(checkm8_payload_length_armv7);
-            config->payload_len = checkm8_payload_length_armv7;
-            memcpy(config->payload, checkm8_payload_armv7, checkm8_payload_length_armv7);
+            config->payload = malloc(checkm8_payload_length_armv7_with_img3_p);
+            config->payload_len = checkm8_payload_length_armv7_with_img3_p;
+            memcpy(config->payload, checkm8_payload_armv7_with_img3_p, checkm8_payload_length_armv7_with_img3_p);
             
-            shellcode_constants = (uint32_t[8]){
-                0x10061988, // 1 - gUSBDescriptors
-                0x10061F80, // 2 - gUSBSerialNumber
-                0x7C54+1, // 3 - usb_create_string_descriptor
-                0x100600D8, // 4 - gUSBSRNMStringDescriptor
-                0x10079800, // 5 - PAYLOAD_DEST
-                PAYLOAD_OFFSET_ARMV7, // 6 - PAYLOAD_OFFSET
-                PAYLOAD_SIZE_ARMV7, // 7 - PAYLOAD_SIZE
-                0x10061A24, // 8 - PAYLOAD_PTR
+            shellcode_constants = (uint32_t[0x8]){
+                0x10061988,             // 1 - gUSBDescriptors
+                0x10061F80,             // 2 - gUSBSerialNumber
+                0x7C55,                 // 3 - usb_create_string_descriptor
+                0x100600D8,             // 4 - gUSBSRNMStringDescriptor
+                0x10079800,             // 5 - PAYLOAD_DEST
+                PAYLOAD_OFFSET_ARMV7,   // 6 - PAYLOAD_OFFSET
+                PAYLOAD_SIZE_ARMV7,     // 7 - PAYLOAD_SIZE
+                0x10061A24,             // 8 - PAYLOAD_PTR
             };
+            shellcode_constants_len = 0x8;
             
-            shellcode_constants_len = 8;
-            usb_constants = (uint32_t[0x8]){
-                0x10000000, // 1 - LOAD_ADDRESS
-                0x65786563, // 2 - EXEC_MAGIC
-                0x646F6E65, // 3 - DONE_MAGIC
-                0x6D656D63, // 4 - MEMC_MAGIC
-                0xEA00000E, // 5 - EXCEPTION_VECTOR
-                0x6E84+1, // 6 - GET_BOOT_TRAMPOLINE
-                0x5F80+1, // 7 - JUMPTO
-                0x7620+1, // 8 - USB_CORE_DO_IO
+            usb_constants = (uint32_t[0xa]){
+                0x10000000,             // 1 - LOAD_ADDRESS
+                IMG3_MAGIC,             // 2 - IMG_MAGIC
+                TAG_DATA,               // 3 - TAG_DATA
+                TAG_KBAG,               // 4 - TAG_KBAG
+                AES_TYPE_GID,           // 5 - AES_TYPE_GID
+                0x7301,                 // 6 - AES_CRYPTO_CMD
+                AES_MODE_256,           // 7 - AES_MODE_256
+                0x1007a215,             // 8 - iBoot32Patcher_PTR
+                0x6E85,                 // 9 - GET_BOOT_TRAMPOLINE
+                0x5F81,                 // a - JUMPTO
             };
-            usb_constants_len = 0x8;
+            usb_constants_len = 0xa;
             
             trampoline = thumb_trampoline(0x10079800+1, 0x8160+1);
             if(!trampoline) {
@@ -192,33 +197,35 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
             break;
             
         case 0x8955:
-            config->payload = malloc(checkm8_payload_length_armv7);
-            config->payload_len = checkm8_payload_length_armv7;
-            memcpy(config->payload, checkm8_payload_armv7, checkm8_payload_length_armv7);
+            config->payload = malloc(checkm8_payload_length_armv7_with_img3_p);
+            config->payload_len = checkm8_payload_length_armv7_with_img3_p;
+            memcpy(config->payload, checkm8_payload_armv7_with_img3_p, checkm8_payload_length_armv7_with_img3_p);
             
-            shellcode_constants = (uint32_t[8]){
-                0x10061988, // 1 - gUSBDescriptors
-                0x10061F80, // 2 - gUSBSerialNumber
-                0x7C94+1, // 3 - usb_create_string_descriptor
-                0x100600D8, // 4 - gUSBSRNMStringDescriptor
-                0x10079800, // 5 - PAYLOAD_DEST
-                PAYLOAD_OFFSET_ARMV7, // 6 - PAYLOAD_OFFSET
-                PAYLOAD_SIZE_ARMV7, // 7 - PAYLOAD_SIZE
-                0x10061A24, // 8 - PAYLOAD_PTR
+            shellcode_constants = (uint32_t[0x8]){
+                0x10061988,             // 1 - gUSBDescriptors
+                0x10061F80,             // 2 - gUSBSerialNumber
+                0x7C95,                 // 3 - usb_create_string_descriptor
+                0x100600D8,             // 4 - gUSBSRNMStringDescriptor
+                0x10079800,             // 5 - PAYLOAD_DEST
+                PAYLOAD_OFFSET_ARMV7,   // 6 - PAYLOAD_OFFSET
+                PAYLOAD_SIZE_ARMV7,     // 7 - PAYLOAD_SIZE
+                0x10061A24,             // 8 - PAYLOAD_PTR
             };
-            shellcode_constants_len = 8;
+            shellcode_constants_len = 0x8;
             
-            usb_constants = (uint32_t[0x8]){
-                0x10000000, // 1 - LOAD_ADDRESS
-                0x65786563, // 2 - EXEC_MAGIC
-                0x646F6E65, // 3 - DONE_MAGIC
-                0x6D656D63, // 4 - MEMC_MAGIC
-                0xEA00000E, // 5 - EXCEPTION_VECTOR
-                0x6EC4+1, // 6 - GET_BOOT_TRAMPOLINE
-                0x5FC0+1, // 7 - JUMPTO
-                0x7660+1, // 8 - USB_CORE_DO_IO
+            usb_constants = (uint32_t[0xa]){
+                0x10000000,             // 1 - LOAD_ADDRESS
+                IMG3_MAGIC,             // 2 - IMG_MAGIC
+                TAG_DATA,               // 3 - TAG_DATA
+                TAG_KBAG,               // 4 - TAG_KBAG
+                AES_TYPE_GID,           // 5 - AES_TYPE_GID
+                0x7341,                 // 6 - AES_CRYPTO_CMD
+                AES_MODE_256,           // 7 - AES_MODE_256
+                0x1007a215,             // 8 - iBoot32Patcher_PTR
+                0x6EC5,                 // 9 - GET_BOOT_TRAMPOLINE
+                0x5FC1,                 // a - JUMPTO
             };
-            usb_constants_len = 0x8;
+            usb_constants_len = 0xa;
             
             trampoline = thumb_trampoline(0x10079800+1, 0x81A0+1);
             if(!trampoline) {
@@ -228,29 +235,30 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
             trampoline_len = TRAMPOLINE_SIZE_ARMV7;
             break;
             
-            case 0x8960:
+        case 0x8960:
             config->payload = malloc(checkm8_payload_length_arm64);
             config->payload_len = checkm8_payload_length_arm64;
             memcpy(config->payload, checkm8_payload_arm64, checkm8_payload_length_arm64);
-            shellcode_constants64 = (uint64_t[8]){
-                0x180086B58, //# 1 - gUSBDescriptors
-                0x180086CDC, //# 2 - gUSBSerialNumber
-                0x10000BFEC, //# 3 - usb_create_string_descriptor
-                0x180080562, //# 4 - gUSBSRNMStringDescriptor
-                0x18037FC00, //# 5 - PAYLOAD_DEST
-                384, //# 6 - PAYLOAD_OFFSET
-                576, //# 7 - PAYLOAD_SIZE
-                0x180086C70, //# 8 - PAYLOAD_PTR
+            
+            shellcode_constants64 = (uint64_t[0x8]){
+                0x180086B58,        // 1 - gUSBDescriptors
+                0x180086CDC,        // 2 - gUSBSerialNumber
+                0x10000BFEC,        // 3 - usb_create_string_descriptor
+                0x180080562,        // 4 - gUSBSRNMStringDescriptor
+                0x18037FC00,        // 5 - PAYLOAD_DEST
+                384,                // 6 - PAYLOAD_OFFSET
+                576,                // 7 - PAYLOAD_SIZE
+                0x180086C70,        // 8 - PAYLOAD_PTR
             };
-            shellcode_constants_len = 8;
+            shellcode_constants_len = 0x8;
             
             usb_constants64 = (uint64_t[0x6]){
-                0x180380000, //# 1 - LOAD_ADDRESS
-                0x6578656365786563, //# 2 - EXEC_MAGIC
-                0x646F6E65646F6E65, //# 3 - DONE_MAGIC
-                0x6D656D636D656D63, //# 4 - MEMC_MAGIC
-                0x6D656D736D656D73, //# 5 - MEMS_MAGIC
-                0x10000CC78, //# 6 - USB_CORE_DO_IO
+                0x180380000,        // 1 - LOAD_ADDRESS
+                0x6578656365786563, // 2 - EXEC_MAGIC
+                0x646F6E65646F6E65, // 3 - DONE_MAGIC
+                0x6D656D636D656D63, // 4 - MEMC_MAGIC
+                0x6D656D736D656D73, // 5 - MEMS_MAGIC
+                0x10000CC78,        // 6 - USB_CORE_DO_IO
             };
             usb_constants_len = 0x6;
             
@@ -351,55 +359,55 @@ int gen_limera1n(int cpid, int rom, unsigned char** payload, size_t* payload_len
         case 0x8920:
             if(rom == 0){ // oldBR
                 shellcode_constants = (uint32_t[22]){
-                    0x84031800, //#  1 - RELOCATE_SHELLCODE_ADDRESS
-                    1024, //#  2 - RELOCATE_SHELLCODE_SIZE
-                    0x83d4, //#  3 - memmove
-                    0x84034000, //#  4 - MAIN_STACK_ADDRESS
-                    0x43c9, //#  5 - nor_power_on
-                    0x5ded, //#  6 - nor_init
-                    0x84024820, //#  7 - gUSBSerialNumber
-                    0x8e7d, //#  8 - strlcat
-                    0x349d, //#  9 - usb_wait_for_image
-                    0x84000000, //# 10 - LOAD_ADDRESS
-                    0x24000, //# 11 - MAX_SIZE
-                    0x84024228, //# 12 - gLeakingDFUBuffer
-                    0x1ccd, //# 13 - free
-                    0x65786563, //# 14 - EXEC_MAGIC
-                    0x1f79, //# 15 - memz_create
-                    0x3969, //# 16 - jump_to
-                    0x1fa1, //# 17 - memz_destroy
-                    0x60, //# 18 - IMAGE3_LOAD_SP_OFFSET
-                    0x50, //# 19 - IMAGE3_LOAD_STRUCT_OFFSET
-                    0x1fe5, //# 20 - image3_create_struct
-                    0x2655, //# 21 - image3_load_continue
-                    0x277b, //# 22 - image3_load_fail
+                    0x84031800, //  1 - RELOCATE_SHELLCODE_ADDRESS
+                    1024,       //  2 - RELOCATE_SHELLCODE_SIZE
+                    0x83d4,     //  3 - memmove
+                    0x84034000, //  4 - MAIN_STACK_ADDRESS
+                    0x43c9,     //  5 - nor_power_on
+                    0x5ded,     //  6 - nor_init
+                    0x84024820, //  7 - gUSBSerialNumber
+                    0x8e7d,     //  8 - strlcat
+                    0x349d,     //  9 - usb_wait_for_image
+                    0x84000000, // 10 - LOAD_ADDRESS
+                    0x24000,    // 11 - MAX_SIZE
+                    0x84024228, // 12 - gLeakingDFUBuffer
+                    0x1ccd,     // 13 - free
+                    0x65786563, // 14 - EXEC_MAGIC
+                    0x1f79,     // 15 - memz_create
+                    0x3969,     // 16 - jump_to
+                    0x1fa1,     // 17 - memz_destroy
+                    0x60,       // 18 - IMAGE3_LOAD_SP_OFFSET
+                    0x50,       // 19 - IMAGE3_LOAD_STRUCT_OFFSET
+                    0x1fe5,     // 20 - image3_create_struct
+                    0x2655,     // 21 - image3_load_continue
+                    0x277b,     // 22 - image3_load_fail
                 };
                 shellcode_constants_len = 22;
             }
             if(rom == 1){ // newBR
                 shellcode_constants = (uint32_t[22]){
-                    0x84031800, //#  1 - RELOCATE_SHELLCODE_ADDRESS
-                    1024, //#  2 - RELOCATE_SHELLCODE_SIZE
-                    0x83dc, //#  3 - memmove
-                    0x84034000, //#  4 - MAIN_STACK_ADDRESS
-                    0x43d1, //#  5 - nor_power_on
-                    0x5df5, //#  6 - nor_init
-                    0x84024820, //#  7 - gUSBSerialNumber
-                    0x8e85, //#  8 - strlcat
-                    0x34a5, //#  9 - usb_wait_for_image
-                    0x84000000, //# 10 - LOAD_ADDRESS
-                    0x24000, //# 11 - MAX_SIZE
-                    0x84024228, //# 12 - gLeakingDFUBuffer
-                    0x1ccd, //# 13 - free
-                    0x65786563, //# 14 - EXEC_MAGIC
-                    0x1f81, //# 15 - memz_create
-                    0x3971, //# 16 - jump_to
-                    0x1fa9, //# 17 - memz_destroy
-                    0x60, //# 18 - IMAGE3_LOAD_SP_OFFSET
-                    0x50, //# 19 - IMAGE3_LOAD_STRUCT_OFFSET
-                    0x1fed, //# 20 - image3_create_struct
-                    0x265d, //# 21 - image3_load_continue
-                    0x2783, //# 22 - image3_load_fail
+                    0x84031800, //  1 - RELOCATE_SHELLCODE_ADDRESS
+                    1024,       //  2 - RELOCATE_SHELLCODE_SIZE
+                    0x83dc,     //  3 - memmove
+                    0x84034000, //  4 - MAIN_STACK_ADDRESS
+                    0x43d1,     //  5 - nor_power_on
+                    0x5df5,     //  6 - nor_init
+                    0x84024820, //  7 - gUSBSerialNumber
+                    0x8e85,     //  8 - strlcat
+                    0x34a5,     //  9 - usb_wait_for_image
+                    0x84000000, // 10 - LOAD_ADDRESS
+                    0x24000,    // 11 - MAX_SIZE
+                    0x84024228, // 12 - gLeakingDFUBuffer
+                    0x1ccd,     // 13 - free
+                    0x65786563, // 14 - EXEC_MAGIC
+                    0x1f81,     // 15 - memz_create
+                    0x3971,     // 16 - jump_to
+                    0x1fa9,     // 17 - memz_destroy
+                    0x60,       // 18 - IMAGE3_LOAD_SP_OFFSET
+                    0x50,       // 19 - IMAGE3_LOAD_STRUCT_OFFSET
+                    0x1fed,     // 20 - image3_create_struct
+                    0x265d,     // 21 - image3_load_continue
+                    0x2783,     // 22 - image3_load_fail
                 };
                 shellcode_constants_len = 22;
             }
@@ -407,56 +415,56 @@ int gen_limera1n(int cpid, int rom, unsigned char** payload, size_t* payload_len
             break;
         case 0x8922:
             shellcode_constants = (uint32_t[22]){
-                0x84031800, //#  1 - RELOCATE_SHELLCODE_ADDRESS
-                1024, //#  2 - RELOCATE_SHELLCODE_SIZE
-                0x8564, //#  3 - memmove
-                0x84034000, //#  4 - MAIN_STACK_ADDRESS
-                0x43b9, //#  5 - nor_power_on
-                0x5f75, //#  6 - nor_init
-                0x84024750, //#  7 - gUSBSerialNumber
-                0x901d, //#  8 - strlcat
-                0x36e5, //#  9 - usb_wait_for_image
-                0x84000000, //# 10 - LOAD_ADDRESS
-                0x24000, //# 11 - MAX_SIZE
-                0x84024158, //# 12 - gLeakingDFUBuffer
-                0x1a51, //# 13 - free
-                0x65786563, //# 14 - EXEC_MAGIC
-                0x1f25, //# 15 - memz_create
-                0x39dd, //# 16 - jump_to
-                0x1f0d, //# 17 - memz_destroy
-                0x64, //# 18 - IMAGE3_LOAD_SP_OFFSET
-                0x60, //# 19 - IMAGE3_LOAD_STRUCT_OFFSET
-                0x2113, //# 20 - image3_create_struct
-                0x2665, //# 21 - image3_load_continue
-                0x276d, //# 22 - image3_load_fail
+                0x84031800, //  1 - RELOCATE_SHELLCODE_ADDRESS
+                1024,       //  2 - RELOCATE_SHELLCODE_SIZE
+                0x8564,     //  3 - memmove
+                0x84034000, //  4 - MAIN_STACK_ADDRESS
+                0x43b9,     //  5 - nor_power_on
+                0x5f75,     //  6 - nor_init
+                0x84024750, //  7 - gUSBSerialNumber
+                0x901d,     //  8 - strlcat
+                0x36e5,     //  9 - usb_wait_for_image
+                0x84000000, // 10 - LOAD_ADDRESS
+                0x24000,    // 11 - MAX_SIZE
+                0x84024158, // 12 - gLeakingDFUBuffer
+                0x1a51,     // 13 - free
+                0x65786563, // 14 - EXEC_MAGIC
+                0x1f25,     // 15 - memz_create
+                0x39dd,     // 16 - jump_to
+                0x1f0d,     // 17 - memz_destroy
+                0x64,       // 18 - IMAGE3_LOAD_SP_OFFSET
+                0x60,       // 19 - IMAGE3_LOAD_STRUCT_OFFSET
+                0x2113,     // 20 - image3_create_struct
+                0x2665,     // 21 - image3_load_continue
+                0x276d,     // 22 - image3_load_fail
             };
             shellcode_constants_len = 22;
             *(uint32_t*)exploit_lr = 0x84033F98;
             break;
         case 0x8930:
             shellcode_constants = (uint32_t[22]){
-                0x84039800, //#  1 - RELOCATE_SHELLCODE_ADDRESS
-                1024, //#  2 - RELOCATE_SHELLCODE_SIZE
-                0x84dc, //#  3 - memmove
-                0x8403c000, //#  4 - MAIN_STACK_ADDRESS
-                0x4e8d, //#  5 - nor_power_on
-                0x690d, //#  6 - nor_init
-                0x8402e0e0, //#  7 - gUSBSerialNumber
-                0x90c9, //#  8 - strlcat
-                0x4c85, //#  9 - usb_wait_for_image
-                0x84000000, //# 10 - LOAD_ADDRESS
-                0x2c000, //# 11 - MAX_SIZE
-                0x8402dbcc, //# 12 - gLeakingDFUBuffer
-                0x3b95, //# 13 - free
-                0x65786563, //# 14 - EXEC_MAGIC
-                0x7469, //# 15 - memz_create
-                0x5a5d, //# 16 - jump_to
-                0x7451, //# 17 - memz_destroy
-                0x68, //# 18 - IMAGE3_LOAD_SP_OFFSET
-                0x64, //# 19 - IMAGE3_LOAD_STRUCT_OFFSET
-                0x412d, //# 20 - image3_create_struct
-                0x46db, //# 21 - image3_load_continue
-                0x47db, //# 22 - image3_load_fail
+                0x84039800, //  1 - RELOCATE_SHELLCODE_ADDRESS
+                1024,       //  2 - RELOCATE_SHELLCODE_SIZE
+                0x84dc,     //  3 - memmove
+                0x8403c000, //  4 - MAIN_STACK_ADDRESS
+                0x4e8d,     //  5 - nor_power_on
+                0x690d,     //  6 - nor_init
+                0x8402e0e0, //  7 - gUSBSerialNumber
+                0x90c9,     //  8 - strlcat
+                0x4c85,     //  9 - usb_wait_for_image
+                0x84000000, // 10 - LOAD_ADDRESS
+                0x2c000,    // 11 - MAX_SIZE
+                0x8402dbcc, // 12 - gLeakingDFUBuffer
+                0x3b95,     // 13 - free
+                0x65786563, // 14 - EXEC_MAGIC
+                0x7469,     // 15 - memz_create
+                0x5a5d,     // 16 - jump_to
+                0x7451,     // 17 - memz_destroy
+                0x68,       // 18 - IMAGE3_LOAD_SP_OFFSET
+                0x64,       // 19 - IMAGE3_LOAD_STRUCT_OFFSET
+                0x412d,     // 20 - image3_create_struct
+                0x46db,     // 21 - image3_load_continue
+                0x47db,     // 22 - image3_load_fail
             };
             shellcode_constants_len = 22;
             *(uint32_t*)exploit_lr = 0x8403BF9C;
