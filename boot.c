@@ -9,8 +9,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <openssl/aes.h>
-
 #include <common.h>
 #include <boot.h>
 #include <client.h>
