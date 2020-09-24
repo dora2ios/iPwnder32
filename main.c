@@ -19,7 +19,7 @@ int fast_dfu=0;
 
 #include <checkm8.h>
 #include <limera1n.h>
-#include <demote.h>
+//#include <demote.h>
 #include <boot.h>
 
 void usage(char** argv) {
@@ -35,15 +35,15 @@ void usage(char** argv) {
     printf("\t\t\t[Additional flag]\n");
     printf("\t\t\t  \x1b[35m-f\x1b[39m: Enable fast mode (s5l8960x only)\n");
     printf("\n");
-    printf("\t-d\t\tDemote device to enable JTAG\n");
-    printf("\n");
+    //printf("\t-d\t\tDemote device to enable JTAG\n");
+    //printf("\n");
     printf("\t-f <img>\tSend DFU image and boot it\n");
 }
 
 int main(int argc, char** argv) {
     int ret;
     int pwned_dfu;
-    int demote;
+    //int demote;
     int boot;
     uint16_t cpid;
     
@@ -64,8 +64,8 @@ int main(int argc, char** argv) {
             }
         }
         
-    } else if(!strcmp(argv[1], "-d")) {
-        demote = 1;
+    //} else if(!strcmp(argv[1], "-d")) {
+    //    demote = 1;
     } else if(!strcmp(argv[1], "-f")) {
         boot = 1;
         
@@ -88,7 +88,8 @@ int main(int argc, char** argv) {
         return -1;
     }
     
-    if(pwned_dfu || demote || boot){
+    //if(pwned_dfu || demote || boot){
+    if(pwned_dfu || boot){
         while(irecv_get_device() != 0) {
             printf("Waiting for device in DFU mode\n");
             sleep(1);
@@ -171,9 +172,9 @@ int main(int argc, char** argv) {
         exploit_exit();
     }
     
-    if(demote) {
-        demote_client();
-    }
+    //if(demote) {
+    //    demote_client();
+    //}
     
     if(boot) {
         boot_client(file, file_len);
