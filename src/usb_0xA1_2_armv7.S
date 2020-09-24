@@ -7,12 +7,13 @@
 .set IMG_MAGIC,             0xBAD00002
 .set TAG_DATA,              0xBAD00003
 .set TAG_KBAG,              0xBAD00004
-.set AES_TYPE_GID,          0xBAD00005
-.set AES_CRYPTO_CMD,        0xBAD00006
-.set AES_MODE_256,          0xBAD00007
-.set IBOOT32PATCHER_PTR,    0xBAD00008
-.set GET_BOOT_TRAMPOLINE,   0xBAD00009
-.set JUMPTO,                0xBAD0000a
+.set EXCEPTION_VECTOR,      0xBAD00005
+.set AES_TYPE_GID,          0xBAD00006
+.set AES_CRYPTO_CMD,        0xBAD00007
+.set AES_MODE_256,          0xBAD00008
+.set IBOOT32PATCHER_PTR,    0xBAD00009
+.set GET_BOOT_TRAMPOLINE,   0xBAD0000a
+.set JUMPTO,                0xBAD0000b
 .code 16
 .global _main
 _main:
@@ -54,6 +55,13 @@ _decrypt_image:
     cmp     r0, #0
     beq     _request_done
     mov     r6, r0
+
+    mov     r1, #0xc
+    add     r1, r6
+    ldr     r2, [r1]
+    ldr     r1, =EXCEPTION_VECTOR
+    cmp     r1, r2
+    beq     _copy_image
 
     ldr     r0, =TAG_KBAG
     ldr     r1, =LOAD_ADDRESS

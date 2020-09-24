@@ -37,7 +37,8 @@ int demote_client() {
     }
     
     char* checkm8_str = strstr(info->serial_string, "checkm8");
-    if(!checkm8_str) {
+    char* ipwnder_str = strstr(info->serial_string, "ipwnder");
+    if(!checkm8_str && !ipwnder_str) {
         printf("This device is not in checkm8 pwned DFU mode.\n");
         return -1;
     }

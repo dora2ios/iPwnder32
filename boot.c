@@ -49,7 +49,7 @@ int boot_client(void* buf, size_t sz) {
         return -1;
     }
     
-    char* checkm8_str = strstr(info->serial_string, "checkm8");
+    char* checkm8_str = strstr(info->serial_string, "ipwnder");
     if(!checkm8_str) {
         //printf("This device is not in checkm8 pwned DFU mode.\n");
         boot_client_n(client, buf, sz); // jump to normal boot

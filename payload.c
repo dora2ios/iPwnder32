@@ -174,19 +174,20 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
             };
             shellcode_constants_len = 0x8;
             
-            usb_constants = (uint32_t[0xa]){
+            usb_constants = (uint32_t[0xb]){
                 0x10000000,             // 1 - LOAD_ADDRESS
                 IMG3_MAGIC,             // 2 - IMG_MAGIC
                 TAG_DATA,               // 3 - TAG_DATA
                 TAG_KBAG,               // 4 - TAG_KBAG
-                AES_TYPE_GID,           // 5 - AES_TYPE_GID
-                0x7301,                 // 6 - AES_CRYPTO_CMD
-                AES_MODE_256,           // 7 - AES_MODE_256
-                0x1007a215,             // 8 - iBoot32Patcher_PTR
-                0x6E85,                 // 9 - GET_BOOT_TRAMPOLINE
-                0x5F81,                 // a - JUMPTO
+                0xea00000e,             // 5 - vector
+                AES_TYPE_GID,           // 6 - AES_TYPE_GID
+                0x7301,                 // 7 - AES_CRYPTO_CMD
+                AES_MODE_256,           // 8 - AES_MODE_256
+                0x1007a225,             // 9 - iBoot32Patcher_PTR
+                0x6E85,                 // a - GET_BOOT_TRAMPOLINE
+                0x5F81,                 // b - JUMPTO
             };
-            usb_constants_len = 0xa;
+            usb_constants_len = 0xb;
             
             trampoline = thumb_trampoline(0x10079800+1, 0x8160+1);
             if(!trampoline) {
@@ -213,19 +214,20 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
             };
             shellcode_constants_len = 0x8;
             
-            usb_constants = (uint32_t[0xa]){
+            usb_constants = (uint32_t[0xb]){
                 0x10000000,             // 1 - LOAD_ADDRESS
                 IMG3_MAGIC,             // 2 - IMG_MAGIC
                 TAG_DATA,               // 3 - TAG_DATA
                 TAG_KBAG,               // 4 - TAG_KBAG
-                AES_TYPE_GID,           // 5 - AES_TYPE_GID
-                0x7341,                 // 6 - AES_CRYPTO_CMD
-                AES_MODE_256,           // 7 - AES_MODE_256
-                0x1007a215,             // 8 - iBoot32Patcher_PTR
-                0x6EC5,                 // 9 - GET_BOOT_TRAMPOLINE
-                0x5FC1,                 // a - JUMPTO
+                0xea00000e,             // 5 - vector
+                AES_TYPE_GID,           // 6 - AES_TYPE_GID
+                0x7341,                 // 7 - AES_CRYPTO_CMD
+                AES_MODE_256,           // 8 - AES_MODE_256
+                0x1007a225,             // 9 - iBoot32Patcher_PTR
+                0x6EC5,                 // a - GET_BOOT_TRAMPOLINE
+                0x5FC1,                 // b - JUMPTO
             };
-            usb_constants_len = 0xa;
+            usb_constants_len = 0xb;
             
             trampoline = thumb_trampoline(0x10079800+1, 0x81A0+1);
             if(!trampoline) {
