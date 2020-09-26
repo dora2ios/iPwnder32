@@ -18,3 +18,5 @@ src/payload.elf.bin
 src/usb_0xA1_2_armv7.bin
 src/usb_0xA1_2_armv7_.bin
 iPwnder32
+libc*.a
+libz*.a

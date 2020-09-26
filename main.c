@@ -9,6 +9,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <irecovery/libirecovery.h>
 
 irecv_client_t client;
@@ -20,6 +23,7 @@ int fast_dfu=0;
 #include <checkm8.h>
 #include <limera1n.h>
 //#include <demote.h>
+#include <partial.h>
 #include <boot.h>
 
 void usage(char** argv) {
@@ -34,16 +38,18 @@ void usage(char** argv) {
     printf("\t\t\t  \x1b[36ms5l8960x\x1b[39m - \x1b[35mcheckm8\x1b[39m\n");
     printf("\t\t\t[Additional flag]\n");
     printf("\t\t\t  \x1b[35m-f\x1b[39m: Enable fast mode (s5l8960x only)\n");
+    printf("\t\t\t  \x1b[35m-b\x1b[39m: Enter pwnediBSS mode (s5l895Xx only)\n");
     printf("\n");
     //printf("\t-d\t\tDemote device to enable JTAG\n");
     //printf("\n");
-    printf("\t-f <img>\tSend DFU image and boot it\n");
+    printf("\t-f <img>\tSend image and boot it\n");
 }
 
 int main(int argc, char** argv) {
     int ret;
     int pwned_dfu;
     //int demote;
+    int use_pwnibss;
     int boot;
     uint16_t cpid;
     
@@ -61,6 +67,9 @@ int main(int argc, char** argv) {
         if(argc == 3){
             if(!strcmp(argv[2], "-f")) {
                 fast_dfu = 1;
+            }
+            if(!strcmp(argv[2], "-b")) {
+                use_pwnibss = 1;
             }
         }
         
@@ -96,12 +105,19 @@ int main(int argc, char** argv) {
         }
     }
     
+    irecv_device_t device = NULL;
+    if(!device){
+        printf("Could not get device info?!\n");
+    }
+    
     if(pwned_dfu) {
         //uint16_t cpid = irecv_get_cpid();
         const struct irecv_device_info *devinfo = irecv_get_device_info(client);
-        if (devinfo){
+        irecv_devices_get_device_by_client(client, &device);
+        
+        if (devinfo&&device){
             cpid = devinfo->cpid;
-            printf("\x1b[7m\x1b[1mDFU device infomation\x1b[0m\n");
+            printf("\x1b[7m\x1b[1mDFU device infomation\x1b[0m \x1b[1;4m%s\x1b[0m [%s]\n", device->display_name, device->product_type);
             printf("CPID:0x%04X CPRV:0x%02X BDID:0x%02X ECID:0x%016llX CPFM:0x%02X SCEP:0x%02X IBFL:0x%02X\n" , devinfo->cpid, devinfo->cprv, devinfo->bdid, devinfo->ecid, devinfo->cpfm, devinfo->scep, devinfo->ibfl);
             if((devinfo->cpfm & 0xFFFFFFFE) == 0x00){
                 printf("\x1b[7;1mProduction Mode: \x1b[41mDevelopment\x1b[49;0m\n");
@@ -179,6 +195,106 @@ int main(int argc, char** argv) {
     if(boot) {
         boot_client(file, file_len);
     }
+    
+    if(use_pwnibss){
+        const char* output = "/tmp/ipwnder32/ibss.tmp";
+        
+        const char* n41 = "iPhone5,1";
+        const char* n42 = "iPhone5,2";
+        const char* n48 = "iPhone5,3";
+        const char* n49 = "iPhone5,4";
+        const char* p101 = "iPad3,4";
+        const char* p102 = "iPad3,5";
+        const char* p103 = "iPad3,6";
+        
+        mkdir("/tmp/ipwnder32", 0755);
+        FILE *fd = fopen(output, "w");
+        if (!fd) {
+            printf("error opening image!\n");
+            return -1;
+        }
+        
+        const char* url;
+        const char* path;
+        int set_done;
+        if(device->product_type == n41){
+            url = "http://appldnld.apple.com/iOS7.1/031-4897.20140627.JCWhk/5ada2e6df3f933abde79738967960a27371ce9f3.zip";
+            path = "AssetData/boot/Firmware/dfu/iBSS.n41ap.RELEASE.dfu";
+            set_done = 1;
+        }
+        
+        if(device->product_type == n42){
+            url = "http://appldnld.apple.com/iOS7.1/031-4897.20140627.JCWhk/a05a5e2e6c81df2c0412c51462919860b8594f75.zip";
+            path = "AssetData/boot/Firmware/dfu/iBSS.n42ap.RELEASE.dfu";
+            set_done = 1;
+        }
+        
+        if(device->product_type == n48){
+            url = "http://appldnld.apple.com/iOS7.1/031-4897.20140627.JCWhk/71ece9ff3c211541c5f2acbc6be7b731d342e869.zip";
+            path = "AssetData/boot/Firmware/dfu/iBSS.n48ap.RELEASE.dfu";
+            set_done = 1;
+        }
+        
+        if(device->product_type == n49){
+            url = "http://appldnld.apple.com/iOS7.1/031-4897.20140627.JCWhk/455309571ffb5ca30c977897d75db77e440728c1.zip";
+            path = "AssetData/boot/Firmware/dfu/iBSS.n49ap.RELEASE.dfu";
+            set_done = 1;
+        }
+        
+        if(device->product_type == p101){
+            url = "http://appldnld.apple.com/iOS7.1/031-4897.20140627.JCWhk/c0cbed078b561911572a09eba30ea2561cdbefe6.zip";
+            path = "AssetData/boot/Firmware/dfu/iBSS.p101ap.RELEASE.dfu";
+            set_done = 1;
+        }
+        
+        if(device->product_type == p102){
+            url = "http://appldnld.apple.com/iOS7.1/031-4897.20140627.JCWhk/3e0efaf1480c74195e4840509c5806cc83c99de2.zip";
+            path = "AssetData/boot/Firmware/dfu/iBSS.p102ap.RELEASE.dfu";
+            set_done = 1;
+        }
+        
+        if(device->product_type == p103){
+            url = "http://appldnld.apple.com/iOS7.1/031-4897.20140627.JCWhk/238641fd4b8ca2153c9c696328aeeedabede6174.zip";
+            path = "AssetData/boot/Firmware/dfu/iBSS.p103ap.RELEASE.dfu";
+            set_done = 1;
+        }
+        
+        if(!set_done){
+            printf("This device does not support the -b flags\n");
+        }
+        
+        printf("Downloading image...\n");
+        ret = partialzip_download_file(url, path, output);
+        if(ret != 0){
+            printf("Failed to get image.\n");
+            return -1;
+        }
+        
+        fd = fopen(output, "r");
+        if (!fd) {
+            printf("error opening image!\n");
+            return -1;
+        }
+        
+        fseek(fd, 0, SEEK_END);
+        size_t sz = ftell(fd);
+        fseek(fd, 0, SEEK_SET);
+        
+        void *buf = malloc(sz);
+        if (!buf) {
+            printf("error allocating file buffer\n");
+            fclose(fd);
+            return -1;
+        }
+        
+        fread(buf, sz, 1, fd);
+        fclose(fd);
+        
+        boot_client(buf, sz);
+        
+        
+    }
+    
     
     
     return 0;
