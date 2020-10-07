@@ -144,7 +144,9 @@ int checkm8_exploit(irecv_client_t client) {
         printf("Failed to create heap hole.\n");
         return -1;
     }
+    
     irecv_reset(client);
+    
     irecv_close(client);
     client = NULL;
     usleep(100);

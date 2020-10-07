@@ -109,8 +109,8 @@ int i3gs_bootrom() {
     const struct irecv_device_info *devinfo = irecv_get_device_info(client);
     if (devinfo) {
         //printf("%s\n", devinfo->srtg);
-        char* i3gs_ptr = strstr(devinfo->srtg, "iBoot-359.3");
-        if(i3gs_ptr) {
+        int i3gs = strcasecmp(devinfo->srtg, "iBoot-359.3");
+        if(i3gs == 0) {
             return 0; // oldBR
         }
         return 1; // newBR

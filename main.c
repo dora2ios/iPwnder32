@@ -106,9 +106,6 @@ int main(int argc, char** argv) {
     }
     
     irecv_device_t device = NULL;
-    if(!device){
-        printf("Could not get device info?!\n");
-    }
     
     if(pwned_dfu) {
         //uint16_t cpid = irecv_get_cpid();
