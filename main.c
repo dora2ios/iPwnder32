@@ -37,25 +37,49 @@ void usage(char** argv) {
     printf("\t\t\t  \x1b[36ms5l895Xx\x1b[39m - \x1b[35mcheckm8\x1b[39m\n");
     printf("\t\t\t  \x1b[36ms5l8960x\x1b[39m - \x1b[35mcheckm8\x1b[39m\n");
     printf("\t\t\t[Additional flag]\n");
-    printf("\t\t\t  \x1b[35m-f\x1b[39m: Enable fast mode (s5l8960x only)\n");
-    printf("\t\t\t  \x1b[35m-b\x1b[39m: Enter pwnediBSS mode (s5l895Xx only)\n");
+    printf("\t\t\t  \x1b[35m--fast\x1b[39m: Enable fast mode (s5l8960x only)\n");
+    printf("\t\t\t  \x1b[35m--ibss\x1b[39m: Enter pwnediBSS mode (s5l895Xx only)\n");
     printf("\n");
     //printf("\t-d\t\tDemote device to enable JTAG\n");
     //printf("\n");
-    printf("\t-f <img>\tSend image and boot it\n");
+    printf("\t-f <image.dfu>\tSend image and boot it\n");
 }
+
+
+#define VERSION     2
+#define NIVERSION   1
+#define NINIVERSION 1
+
+#define FIXNUM      4
 
 int main(int argc, char** argv) {
     int ret;
     int pwned_dfu;
-    //int demote;
     int use_pwnibss;
     int boot;
+    int disableDRA;
     uint16_t cpid;
     
     FILE* fp = NULL;
     void* file;
     size_t file_len;
+    
+    /* build ver */
+    int MajorVer = VERSION;
+    int MinorVer = NIVERSION;
+    int MinorMinorVer = NINIVERSION;
+    
+    int BNver = MinorVer+10;
+    int MNuver = (MinorVer*3) + (MinorMinorVer*5) + (FIXNUM);
+    
+    printf("** iPwnder32 v%d.%d.%d [Build: %d%X%d] by @dora2ios\n",
+         MajorVer,      // Major version
+         MinorVer,
+         MinorMinorVer,
+         MajorVer,      // Major version
+         BNver,         // Build version
+         MNuver         // Minor version
+         );
     
     if(argc == 1) {
         usage(argv);
@@ -65,16 +89,14 @@ int main(int argc, char** argv) {
     if(!strcmp(argv[1], "-p")) {
         pwned_dfu = 1;
         if(argc == 3){
-            if(!strcmp(argv[2], "-f")) {
+            if(!strcmp(argv[2], "--fast")) {
                 fast_dfu = 1;
             }
-            if(!strcmp(argv[2], "-b")) {
+            if(!strcmp(argv[2], "--ibss")) {
                 use_pwnibss = 1;
             }
         }
         
-    //} else if(!strcmp(argv[1], "-d")) {
-    //    demote = 1;
     } else if(!strcmp(argv[1], "-f")) {
         boot = 1;
         
@@ -97,7 +119,6 @@ int main(int argc, char** argv) {
         return -1;
     }
     
-    //if(pwned_dfu || demote || boot){
     if(pwned_dfu || boot){
         while(irecv_get_device() != 0) {
             printf("Waiting for device in DFU mode\n");
@@ -185,14 +206,14 @@ int main(int argc, char** argv) {
         exploit_exit();
     }
     
-    //if(demote) {
-    //    demote_client();
-    //}
-    
+    // send image
     if(boot) {
         boot_client(file, file_len);
     }
     
+    
+    
+    // real pwndfu
     if(use_pwnibss){
         const char* output = "/tmp/ipwnder32/ibss.tmp";
         
