@@ -50,7 +50,7 @@ void usage(char** argv) {
 #define NIVERSION   1
 #define NINIVERSION 1
 
-#define FIXNUM      4
+#define FIXNUM      5
 
 int main(int argc, char** argv) {
     int ret;
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
     int BNver = MinorVer+10;
     int MNuver = (MinorVer*3) + (MinorMinorVer*5) + (FIXNUM);
     
-    printf("** iPwnder32 v%d.%d.%d [Build: %d%X%d] by @dora2ios\n",
+    printf("\x1b[1m** iPwnder32 v%d.%d.%d [%d%X%d]\x1b[0m by @dora2ios\n",
          MajorVer,      // Major version
          MinorVer,
          MinorMinorVer,
