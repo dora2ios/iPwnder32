@@ -1,14 +1,15 @@
-/*
- * checkm8.h
- * copyright (C) 2020/05/25 dora2ios
- *
- */
 
-#ifndef checkm8_H
-#define checkm8_H
+#include <stdint.h>
 
-#include <irecovery/libirecovery.h>
+int checkm8_32_exploit(irecv_client_t client, irecv_device_t device, const struct irecv_device_info *devinfo);
 
-void checkm8_init();
+typedef struct checkm8_32 {
+    uint16_t large_leak;
+    int overwrite_offset;
+    unsigned char* overwrite;
+    size_t overwrite_len;
+    unsigned char* payload;
+    size_t payload_len;
+} checkm8_32_t;
 
-#endif
+int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_32_t* config);

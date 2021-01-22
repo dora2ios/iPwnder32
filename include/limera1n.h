@@ -1,14 +1,3 @@
-/*
- * limera1n.h
- * copyright (C) 2020/05/25 dora2ios
- *
- */
 
-#ifndef limera1n_H
-#define limera1n_H
-
-#include <irecovery/libirecovery.h>
-
-void limera1n_init();
-
-#endif
+int gen_limera1n(int cpid, int rom, unsigned char** payload, size_t* payload_len);
+int limera1n_exploit(irecv_client_t client, irecv_device_t device_info, const struct irecv_device_info *info);

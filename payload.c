@@ -8,9 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <payload.h>
-#include <checkm8_payload.h>
-#include <limera1n_payload.h>
+#include <ircv.h>
+#include <checkm8.h>
+
+#include <limera1n_p.h>
+#include <checkm8_p.h>
 
 #define bswap32                 __builtin_bswap32
 
@@ -36,7 +38,7 @@ unsigned char trampoline64[] = {
 // based on synackuk's belladonna
 // https://github.com/synackuk/belladonna/blob/824363bbc287da3cd2d97cba69aa746db89a86b6/src/exploits/checkm8/payload_gen.c
 
-char* thumb_trampoline(uint32_t src, uint32_t dest) {
+static char* thumb_trampoline(uint32_t src, uint32_t dest) {
     char* trampoline = malloc(TRAMPOLINE_SIZE_ARMV7);
     if(src % 2 != 1 || dest % 2 != 1) {
         free(trampoline);
@@ -53,14 +55,14 @@ char* thumb_trampoline(uint32_t src, uint32_t dest) {
     return trampoline;
 }
 
-char* asm_arm64_x7_trampoline(uint64_t src) {
+static char* asm_arm64_x7_trampoline(uint64_t src) {
     char* trampoline = malloc(sizeof(16));
     *(uint64_t*) trampoline = 0xd61f00e058000047;
     *(uint64_t*) (trampoline + sizeof(uint64_t)) = src;
     return trampoline;
 }
 
-char* asm_arm64_branch(uint32_t src, uint32_t dest) {
+static char* asm_arm64_branch(uint32_t src, uint32_t dest) {
     char* trampoline = malloc(sizeof(uint32_t));
     uint32_t value;
     if(src > dest) {
@@ -74,7 +76,7 @@ char* asm_arm64_branch(uint32_t src, uint32_t dest) {
 }
 
 
-int add_payload_offsets(unsigned char* payload, size_t payload_len, uint32_t* offsets, size_t num_offsets) {
+static int add_payload_offsets(unsigned char* payload, size_t payload_len, uint32_t* offsets, size_t num_offsets) {
     for(size_t i = 0; i < num_offsets; i++) {
         uint32_t value = 0xBAD00001 + i;
         char* ptr = memmem(payload, payload_len, &value, sizeof(uint32_t));
@@ -86,7 +88,7 @@ int add_payload_offsets(unsigned char* payload, size_t payload_len, uint32_t* of
     return 0;
 }
 
-int add_payload_offsets64(unsigned char* payload, size_t payload_len, uint64_t* offsets, size_t num_offsets) {
+static int add_payload_offsets64(unsigned char* payload, size_t payload_len, uint64_t* offsets, size_t num_offsets) {
     for(int i = 0; i < num_offsets; i++) {
         uint64_t value = 0x00000000BAD00001 + i;
         char* ptr = memmem(payload, payload_len, &value, sizeof(uint64_t));
@@ -99,7 +101,7 @@ int add_payload_offsets64(unsigned char* payload, size_t payload_len, uint64_t* 
 }
 
 
-int add_trampoline(unsigned char* payload, size_t payload_len, char* trampoline, size_t trampoline_len) {
+static int add_trampoline(unsigned char* payload, size_t payload_len, char* trampoline, size_t trampoline_len) {
     uint32_t value = 0xFEEDFACE;
     char* ptr = memmem(payload, payload_len, &value, sizeof(uint32_t));
     if(!ptr) {
@@ -109,7 +111,7 @@ int add_trampoline(unsigned char* payload, size_t payload_len, char* trampoline,
     return 0;
 }
 
-int add_trampoline64_asm_arm64_x7_trampoline(unsigned char* payload, size_t payload_len, char* trampoline, size_t trampoline_len) {
+static int add_trampoline64_asm_arm64_x7_trampoline(unsigned char* payload, size_t payload_len, char* trampoline, size_t trampoline_len) {
     unsigned char val[16];
     int i;
     for(i = 0; i < 16; i++){
@@ -124,7 +126,7 @@ int add_trampoline64_asm_arm64_x7_trampoline(unsigned char* payload, size_t payl
     return 0;
 }
 
-int add_trampoline64_asm_arm64_branch(unsigned char* payload, size_t payload_len, char* trampoline, size_t trampoline_len) {
+static int add_trampoline64_asm_arm64_branch(unsigned char* payload, size_t payload_len, char* trampoline, size_t trampoline_len) {
     unsigned char val[4];
     int i;
     for(i = 0; i < 4; i++){
@@ -140,7 +142,7 @@ int add_trampoline64_asm_arm64_branch(unsigned char* payload, size_t payload_len
 }
 
 
-int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_config_t* config) {
+int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_32_t* config) {
     int ret;
     
     uint32_t* shellcode_constants;
@@ -191,7 +193,7 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
             
             trampoline = thumb_trampoline(0x10079800+1, 0x8160+1);
             if(!trampoline) {
-                printf("Failed to build payload trampoline.\n");
+                printf("\x1b[31mERROR: Failed to build payload trampoline.\x1b[39m\n");
                 return -1;
             }
             trampoline_len = TRAMPOLINE_SIZE_ARMV7;
@@ -231,7 +233,7 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
             
             trampoline = thumb_trampoline(0x10079800+1, 0x81A0+1);
             if(!trampoline) {
-                printf("Failed to build payload trampoline.\n");
+                printf("\x1b[31mERROR: Failed to build payload trampoline.\x1b[39m\n");
                 return -1;
             }
             trampoline_len = TRAMPOLINE_SIZE_ARMV7;
@@ -266,14 +268,14 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
             
             trampoline = asm_arm64_x7_trampoline(0x10000CFB4);
             if(!trampoline) {
-                printf("failed to build payload trampoline.\n");
+                printf("\x1b[31mERROR: Failed to build payload trampoline.\x1b[39m\n");
                 return -1;
             }
             trampoline_len = 0x10;
             
             trampoline2 = asm_arm64_branch(0x10, 0x0);
             if(!trampoline2) {
-                printf("failed to build payload trampoline.\n");
+                printf("\x1b[31mERROR: Failed to build payload trampoline.\x1b[39m\n");
                 return -1;
             }
             trampoline2_len = sizeof(uint32_t);
@@ -287,17 +289,17 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
     if((cpid|0xf) == 0x895f){
         ret = add_payload_offsets(config->payload, config->payload_len, shellcode_constants, shellcode_constants_len);
         if(ret != 0) {
-            printf("Failed to add offsets to payload.\n");
+            printf("\x1b[31mERROR: Failed to add offsets to payload.\x1b[39m\n");
             return -1;
         }
         ret = add_payload_offsets(config->payload, config->payload_len, usb_constants, usb_constants_len);
         if(ret != 0) {
-            printf("Failed to add offsets to payload.\n");
+            printf("\x1b[31mERROR: Failed to add offsets to payload.\x1b[39m\n");
             return -1;
         }
         ret = add_trampoline(config->payload, config->payload_len, trampoline, trampoline_len);
         if(ret != 0) {
-            printf("Failed to add trampoline to payload.\n");
+            printf("\x1b[31mERROR: Failed to add trampoline to payload.\x1b[39m\n");
             return -1;
         }
     }
@@ -305,23 +307,23 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
     if(cpid == 0x8960){
         ret = add_payload_offsets64(config->payload, config->payload_len, shellcode_constants64, shellcode_constants_len);
         if(ret != 0) {
-            printf("failed to add offsets to payload.\n");
+            printf("\x1b[31mERROR: Failed to add offsets to payload.\x1b[39m\n");
             return -1;
         }
         ret = add_payload_offsets64(config->payload, config->payload_len, usb_constants64, usb_constants_len);
         if(ret != 0) {
-            printf("failed to add offsets to payload.\n");
+            printf("\x1b[31mERROR: Failed to add offsets to payload.\x1b[39m\n");
             return -1;
         }
         ret = add_trampoline64_asm_arm64_x7_trampoline(config->payload, config->payload_len, trampoline, trampoline_len);
         if(ret != 0) {
-            printf("failed to add trampoline1 to payload.\n");
+            printf("\x1b[31mERROR: Failed to add trampoline1 to payload.\x1b[39m\n");
             return -1;
         }
         
         ret = add_trampoline64_asm_arm64_branch(config->payload, config->payload_len, trampoline2, trampoline2_len);
         if(ret != 0) {
-            printf("failed to add trampoline2 to payload.\n");
+            printf("\x1b[31mERROR: Failed to add trampoline2 to payload.\x1b[39m\n");
             return -1;
         }
     }
@@ -331,7 +333,7 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_con
 
 
 // limera1n helper
-int add_exploit_lr(unsigned char* payload, size_t payload_len, uint32_t* exploit_lr, size_t exploit_lr_len) {
+static int add_exploit_lr(unsigned char* payload, size_t payload_len, uint32_t* exploit_lr, size_t exploit_lr_len) {
     uint32_t magic = 0xFEEDFACE;
     char* ptr;
     
@@ -472,20 +474,20 @@ int gen_limera1n(int cpid, int rom, unsigned char** payload, size_t* payload_len
             *(uint32_t*)exploit_lr = 0x8403BF9C;
             break;
         default:
-            printf("no payload offsets are available for this device.\n");
+            printf("\x1b[31mERROR: No payload offsets are available for this device.\x1b[39m\n");
             return -1;
     }
     
     
     ret = add_payload_offsets(*payload, *payload_len, shellcode_constants, shellcode_constants_len);
     if(ret != 0) {
-        printf("failed to add offsets to payload.\n");
+        printf("\x1b[31mERROR: Failed to add offsets to payload.\x1b[39m\n");
         return -1;
     }
     
     ret = add_exploit_lr(*payload, *payload_len, exploit_lr, 4);
     if(ret != 0) {
-        printf("failed to add exploit_lr to payload.\n");
+        printf("\x1b[31mERROR: Failed to add exploit_lr to payload.\x1b[39m\n");
         return -1;
     }
     
