@@ -16,7 +16,7 @@
 #define NIVERSION   1
 #define NINIVERSION 0
 
-#define FIXNUM      123
+#define FIXNUM      124
 
 irecv_client_t client;
 
@@ -164,6 +164,7 @@ static int init_dl(){
         if(dl_file(url, path, realpath) != 0) return -1;
     }
     
+#ifdef HAVE_HOOKER
     realpath = n42_ibecX;
     fd = fopen(realpath, "r");
     if(!fd){
@@ -171,7 +172,7 @@ static int init_dl(){
         path = "AssetData/boot/Firmware/dfu/iBEC.iphone5.RELEASE.dfu";
         if(dl_file(url, path, realpath) != 0) return -1;
     }
-    
+#endif
     
     
     return 0;
@@ -208,7 +209,9 @@ int main(int argc, char** argv) {
     const char* ibecpath;
     
     int pwndfu=0;
+#ifdef HAVE_HOOKER
     int TBX=0;
+#endif
     int pwnibss=0;
     int no_pwnibss=0;
     int send=0;
@@ -447,7 +450,9 @@ int main(int argc, char** argv) {
         boot_client(client, buf, sz);
         free(buf);
         
+#ifdef HAVE_HOOKER
         if(TBX != 1){
+#endif
             client = NULL;
             usleep(1000);
             irecv_open_with_ecid_and_attempts(&client, 0, 10);
@@ -457,8 +462,9 @@ int main(int argc, char** argv) {
             }
             printf("\x1b[31;1mDevice is now in pwned iBSS mode!\x1b[39;0m\n");
             irecv_close(client);
+#ifdef HAVE_HOOKER
         }
-        
+#endif
     }
     
     
