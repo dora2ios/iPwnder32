@@ -1,6 +1,6 @@
 #!/bin/sh
 
 echo "making RELEASE Build"
-clang ipwnder32.c ircv.c checkm8.c payload.c limera1n.c partial.c boot.c static/macosx/x86_64/iboot32patcher.a -I./include -framework IOKit -framework CoreFoundation -lcurl -lz -arch arm64 -o ipwnder32
+clang ipwnder32.c ircv.c checkm8.c payload.c limera1n.c partial.c boot.c static/macosx/arm64/iboot32patcher.a -I./include -framework IOKit -framework CoreFoundation -lcurl -lz -arch arm64 -o ipwnder32
 strip ipwnder32
 mv -v ipwnder32 ipwnder32_arm64

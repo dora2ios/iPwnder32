@@ -609,13 +609,19 @@ static irecv_error_t iokit_usb_open_service(irecv_client_t *pclient, io_service_
     return IRECV_E_SUCCESS;
 }
 
+
+static const char *darwin_device_class = kIOUSBDeviceClassName;
+
 static io_iterator_t iokit_usb_get_iterator_for_pid(UInt16 pid) {
     
     IOReturn result;
     io_iterator_t iterator;
     CFMutableDictionaryRef matchingDict;
     
-    matchingDict = IOServiceMatching(kIOUSBDeviceClassName);
+#ifdef IPHONEOS_ARM
+    darwin_device_class = "IOUSBHostDevice";
+#endif
+    matchingDict = IOServiceMatching(darwin_device_class);
     iokit_cfdictionary_set_short(matchingDict, CFSTR(kUSBVendorID), kAppleVendorID);
     iokit_cfdictionary_set_short(matchingDict, CFSTR(kUSBProductID), pid);
     

