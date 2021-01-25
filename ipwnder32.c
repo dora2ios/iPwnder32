@@ -16,7 +16,7 @@
 #define NIVERSION   1
 #define NINIVERSION 1
 
-#define FIXNUM      128
+#define FIXNUM      129
 
 irecv_client_t client;
 
@@ -91,6 +91,7 @@ const char* p101 = "iPad3,4";
 const char* p102 = "iPad3,5";
 const char* p103 = "iPad3,6";
 
+#ifndef IPHONEOS_ARM
 const char *n41_ibss = "image3/ibss.n41";
 const char *n42_ibss = "image3/ibss.n42";
 const char *n48_ibss = "image3/ibss.n48";
@@ -98,8 +99,21 @@ const char *n49_ibss = "image3/ibss.n49";
 const char *p101_ibss = "image3/ibss.p101";
 const char *p102_ibss = "image3/ibss.p102";
 const char *p103_ibss = "image3/ibss.p103";
-
+#ifdef HAVE_HOOKER
 const char *n42_ibecX = "image3/ibecX.n42";
+#endif
+#else
+const char *n41_ibss = "/var/mobile/image3/ibss.n41";
+const char *n42_ibss = "/var/mobile/image3/ibss.n42";
+const char *n48_ibss = "/var/mobile/image3/ibss.n48";
+const char *n49_ibss = "/var/mobile/image3/ibss.n49";
+const char *p101_ibss = "/var/mobile/image3/ibss.p101";
+const char *p102_ibss = "/var/mobile/image3/ibss.p102";
+const char *p103_ibss = "/var/mobile/image3/ibss.p103";
+#ifdef HAVE_HOOKER
+const char *n42_ibecX = "/var/mobile/image3/ibecX.n42";
+#endif
+#endif
 
 static int init_dl(){
     const char* url;
