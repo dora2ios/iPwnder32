@@ -8,9 +8,7 @@ libcurl.*
 libz.*
 libzip.*
 hooker.h
-BUILD_arm64_ios
-iPwnder32_iphoneos_arm64
-BUILD_armv7_ios
-ipwnder32_iphoneos_arm
+BUILD_*_ios
 static/iphoneos-arm/iboot32patcher.a
-iPwnder32_iphoneos-arm64
+iPwnder32_*
+BUILD_*_DEBUG
