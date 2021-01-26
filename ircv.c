@@ -938,6 +938,9 @@ static int iokit_usb_control_transfer(irecv_client_t client, uint8_t bm_request_
     switch (result) {
         case kIOReturnSuccess:         return req.wLenDone;
         case kIOUSBPipeStalled:        return IRECV_E_PIPE;
+#ifdef IPHONEOS_ARM
+        case kUSBHostReturnPipeStalled:return IRECV_E_PIPE;
+#endif
         case kIOReturnTimeout:         return IRECV_E_TIMEOUT;
         case kIOUSBTransactionTimeout: return IRECV_E_TIMEOUT;
         case kIOReturnNotResponding:   return IRECV_E_NO_DEVICE;
@@ -963,6 +966,9 @@ static int iokit_async_usb_control_transfer(irecv_client_t client, uint8_t bm_re
     switch (result) {
         case kIOReturnSuccess:         return IRECV_E_SUCCESS;
         case kIOUSBPipeStalled:        return IRECV_E_PIPE;
+#ifdef IPHONEOS_ARM
+        case kUSBHostReturnPipeStalled:return IRECV_E_PIPE;
+#endif
         case kIOReturnTimeout:         return IRECV_E_TIMEOUT;
         case kIOUSBTransactionTimeout: return IRECV_E_TIMEOUT;
         case kIOReturnNotResponding:   return IRECV_E_NO_DEVICE;
