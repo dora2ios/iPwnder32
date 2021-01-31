@@ -57,12 +57,12 @@ This project basically follows GPLv3. However, some of the currently private GPL
 
 
 ## Credits  
-    * [libimobiledevice](https://github.com/libimobiledevice) for [libirecovery](https://github.com/libimobiledevice/libirecovery)  
-    * [iH8sn0w](https://github.com/iH8sn0w) for [iBoot32Patcher](https://github.com/iH8sn0w/iBoot32Patcher)  
-    * [axi0mX](https://github.com/axi0mX) for [ipwndfu](https://github.com/axi0mX/ipwndfu)  
-    * [synackuk](https://github.com/synackuk) for [belladonna](https://github.com/synackuk/belladonna)  
-    * geohot for limera1n exploit  
-    * many creators of [iBoot32Patcher](https://github.com/dora2-iOS/iBoot32Patcher) fork  
+- [libimobiledevice](https://github.com/libimobiledevice) for [libirecovery](https://github.com/libimobiledevice/libirecovery)  
+- [iH8sn0w](https://github.com/iH8sn0w) for [iBoot32Patcher](https://github.com/iH8sn0w/iBoot32Patcher)  
+- [axi0mX](https://github.com/axi0mX) for [ipwndfu](https://github.com/axi0mX/ipwndfu)  
+- [synackuk](https://github.com/synackuk) for [belladonna](https://github.com/synackuk/belladonna)  
+- geohot for limera1n exploit  
+- many creators of [iBoot32Patcher](https://github.com/dora2-iOS/iBoot32Patcher) fork  
 
 
 README: updated on 2021/02/01  
