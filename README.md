@@ -1,8 +1,8 @@
 # iPwnder32  
-*Tools for utilizing iOS devices using limera1n / checkm8  Bootrom exploit*  
+*A Tool for utilizing iOS devices using limera1n/checkm8  BootROM exploit*  
 
 ## Features  
-This tool is intended to take advantage of the Bootrom exploit present on iOS devices.  
+This tool is intended to take advantage of the BootROM exploit present on iOS devices.  
 It is written in the C and is only available on macosx.  
 
 
