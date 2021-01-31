@@ -7,8 +7,7 @@ It is written in the C and is only available on macosx.
 
 
 ## Library dependencies  
-    Required:  
-    * [libcurl](https://github.com/curl/curl)  
+- [libcurl](https://github.com/curl/curl)  
 
 
 ## Make  
