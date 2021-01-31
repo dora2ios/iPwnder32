@@ -1,3 +1,25 @@
+/*
+ * libirecovery.h
+ * Communication to iBoot/iBSS on Apple iOS devices via USB
+ *
+ * Copyright (c) 2012-2019 Nikias Bassen <nikias@gmx.li>
+ * Copyright (c) 2012-2013 Martin Szulecki <m.szulecki@libimobiledevice.org>
+ * Copyright (c) 2010 Chronic-Dev Team
+ * Copyright (c) 2010 Joshua Hill
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Lesser General Public License
+ * (LGPL) version 2.1 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/lgpl-2.1.html
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ */
+
+#ifndef IRCV_H
+#define IRCV_H
 
 #include <stdint.h>
 
@@ -117,3 +139,5 @@ irecv_error_t irecv_async_usb_control_transfer_with_cancel(irecv_client_t client
 irecv_error_t irecv_finish_transfer(irecv_client_t client);
 irecv_error_t irecv_send_buffer(irecv_client_t client, unsigned char* buffer, unsigned long length, int dfu_notify_finished);
 irecv_error_t irecv_send_command(irecv_client_t client, const char* command);
+
+#endif
