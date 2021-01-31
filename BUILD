@@ -57,15 +57,12 @@ fi
 
 case "$1" in
   '--intel')
-    echo "intel"
     ARCH="x86_64"
     ;;
   '--M1')
-    echo "M1"
     ARCH="arm64"
     ;;
   '--universal')
-    echo "universal"
     ARCH="universal"
     ;;
   *)
