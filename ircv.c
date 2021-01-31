@@ -1,10 +1,31 @@
+/*
+ * libirecovery.c
+ * Communication to iBoot/iBSS on Apple iOS devices via USB
+ *
+ * Copyright (c) 2011-2020 Nikias Bassen <nikias@gmx.li>
+ * Copyright (c) 2012-2020 Martin Szulecki <martin.szulecki@libimobiledevice.org>
+ * Copyright (c) 2010 Chronic-Dev Team
+ * Copyright (c) 2010 Joshua Hill
+ * Copyright (c) 2008-2011 Nicolas Haunold
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Lesser General Public License
+ * (LGPL) version 2.1 which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/lgpl-2.1.html
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ */
+
+/* original: https://github.com/libimobiledevice/libirecovery */
+
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/usb/IOUSBLib.h>
 #include <IOKit/IOCFPlugIn.h>
 
 #include <ircv.h>
-
-/* libirecovery: https://github.com/libimobiledevice/libirecovery */
 
 #define IRECV_API __attribute__((visibility("default")))
 
