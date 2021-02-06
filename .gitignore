@@ -12,3 +12,5 @@ BUILD_*_ios
 static/iphoneos-arm/iboot32patcher.a
 iPwnder32_*
 BUILD_*_DEBUG
+BUILD_RELEASE
+iPwnder32

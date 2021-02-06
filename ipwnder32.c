@@ -34,9 +34,9 @@
 
 #define VERSION     3
 #define NIVERSION   1
-#define NINIVERSION 1
+#define NINIVERSION 2
 
-#define FIXNUM      130
+#define FIXNUM      140
 
 irecv_client_t client;
 
