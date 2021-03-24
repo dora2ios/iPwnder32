@@ -318,7 +318,7 @@ int checkm8_32_exploit(irecv_client_t client, irecv_device_t device_info, const 
         return -1;
     }
     
-    if(chipid == 0x8960){
+    if(0){
         // SecureROM Signature check remover by Linus Henze
         DEBUG_("\x1b[36mRemoving SecureROM Signature check\x1b[39m\n");
         
