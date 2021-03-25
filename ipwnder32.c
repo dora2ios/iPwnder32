@@ -33,10 +33,10 @@
 #include <boot.h>
 
 #define VERSION     3
-#define NIVERSION   1
-#define NINIVERSION 3
+#define NIVERSION   2
+#define NINIVERSION 0
 
-#define FIXNUM      144
+#define FIXNUM      145
 
 irecv_client_t client;
 
