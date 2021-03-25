@@ -36,7 +36,7 @@
 #define NIVERSION   1
 #define NINIVERSION 3
 
-#define FIXNUM      142
+#define FIXNUM      144
 
 irecv_client_t client;
 
@@ -396,7 +396,7 @@ int main(int argc, char** argv) {
             limera1n_exploit(client, device, devinfo);
         } else if((devinfo->cpid|0xf) == (0x8950|0xf)){
             //printf("checkm8_32\n");
-            checkm8_32_exploit(client, device, devinfo);
+            r = checkm8_32_exploit(client, device, devinfo);
             pwnibss = 1;
         } else if(devinfo->cpid == 0x8960){
             //printf("checkm8_32\n");
@@ -407,7 +407,9 @@ int main(int argc, char** argv) {
         
     }
     
-    
+    if(r != 0){
+        return -1;
+    }
     
     if(pwnibss == 1 && no_pwnibss != 1){
         client = NULL;

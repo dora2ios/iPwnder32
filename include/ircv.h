@@ -22,6 +22,7 @@
 #define IRCV_H
 
 #include <stdint.h>
+#include <IOKit/usb/IOUSBLib.h>
 
 #define AES_DECRYPT_IOS 0x11
 #define AES_GID_KEY     0x20000200
