@@ -36,7 +36,7 @@
 #define NIVERSION   2
 #define NINIVERSION 0
 
-#define FIXNUM      145
+#define FIXNUM      146
 
 irecv_client_t client;
 
