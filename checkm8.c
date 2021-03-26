@@ -115,7 +115,6 @@ static int get_exploit_configuration(uint16_t cpid, checkm8_32_t* config) {
     }
 }
 
-// for A7
 static int heap(irecv_client_t client, uint16_t cpid, checkm8_32_t config){
     int r;
     
