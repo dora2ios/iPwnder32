@@ -7,6 +7,22 @@ assignees: ''
 
 ---
 
+**Keep the following in mind when presenting logs**
+ - Hide the ECID and SRNM of your device.  
+ - Be sure to use a debug build.  
+   - Bad example  
+   ```
+   macOS: User$ ./iPwnder32
+   ** iPwnder32 - RELEASE v3.2.0 [3C152] by ...
+   ...
+   ```
+   - Good example  
+   ```
+   macOS: User$ ./iPwnder32
+   ** iPwnder32 - DEBUG v3.2.0 [3C152] by ...
+   ...
+   ```
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
