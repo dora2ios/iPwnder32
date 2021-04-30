@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-**Keep the following in mind when presenting logs**
+**Keep the following in mind when presenting logs (please delete this item when posting)**
  - Hide the ECID and SRNM of your device.  
  - Be sure to use a debug build.  
    - Unhelpful log (not useful for resolution)  
