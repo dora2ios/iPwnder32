@@ -2,7 +2,7 @@
 name: Bug report
 about: Create a report to help us improve
 title: ''
-labels: ''
+labels: bug
 assignees: ''
 
 ---
@@ -10,13 +10,13 @@ assignees: ''
 **Keep the following in mind when presenting logs**
  - Hide the ECID and SRNM of your device.  
  - Be sure to use a debug build.  
-   - Bad example  
+   - Unhelpful log (not useful for resolution)  
    ```
    macOS: User$ ./iPwnder32
    ** iPwnder32 - RELEASE v3.2.0 [3C152] by ...
    ...
    ```
-   - Good example  
+   - Helpful log (useful for resolution)  
    ```
    macOS: User$ ./iPwnder32
    ** iPwnder32 - DEBUG v3.2.0 [3C152] by ...
@@ -39,6 +39,9 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
+**Debug Logs**
+Log when a problem occurs (Do not post the same log multiple times).
+
 **Your environment (please complete the following information):**
  - macOS Version: [e.g. macOS 10.13.6 ]
  - BuildVersion: [e.g. 17G13035 ]
@@ -48,6 +51,10 @@ If applicable, add screenshots to help explain your problem.
 **Target iOS devices (please complete the following information):**
  - Device: [e.g. iPhone5,2]
  - CHIP (uint16_t): [e.g. 0x8950]
+
+**Build version of iPwnder32 (please complete the following information):**
+ - Version: [e.g. v3.2.0]
+ - Build: [e.g. 3C152]
 
 **Additional context**
 Add any other context about the problem here.
