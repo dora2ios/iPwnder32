@@ -42,11 +42,12 @@ If applicable, add screenshots to help explain your problem.
 **Debug Logs**
 Log when a problem occurs (Do not post the same log multiple times).
 
-**Your environment (please complete the following information):**
- - macOS Version: [e.g. macOS 10.13.6 ]
- - BuildVersion: [e.g. 17G13035 ]
+**Execution environment (please complete the following information):**
+ - macOS/iOS Version: [e.g. macOS 10.13.6]
+ - BuildVersion: [e.g. 17G13035]
  - Device: [e.g. MacBookPro12,1]
  - Architecture [e.g. x86_64, arm64]
+ - Jailbreak (only when the exec env is iOS) [e.g. checkra1n]
 
 **Target iOS devices (please complete the following information):**
  - Device: [e.g. iPhone5,2]
