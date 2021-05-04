@@ -5,6 +5,9 @@
 This tool is intended to take advantage of the BootROM exploit present on iOS devices.  
 It is written in the C and is only available on macosx.  
 
+## Supported environments  
+- macOS 10.13 or later (intel/x86_64)  
+- macOS 11.0 - 11.2.3 (M1/arm64)  
 
 ## Library dependencies  
 - [libcurl](https://github.com/curl/curl)  
